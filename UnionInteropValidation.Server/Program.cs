@@ -1,4 +1,4 @@
-using UnionInteropValidationServer.Components;
+using UnionInteropValidation.Server.Components;
 
 var builder = WebApplication.CreateBuilder(args);
 

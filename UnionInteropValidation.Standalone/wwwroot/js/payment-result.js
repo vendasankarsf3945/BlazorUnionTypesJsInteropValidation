@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Payment Result - Test complex properties (decimal, DateTime, nullable)
  * Demonstrates proper serialization of complex types in union cases
  */
@@ -38,7 +38,7 @@ export function processPayment(payment) {
 export async function callCSharpWithPayment() {
     console.log("JS calling C# method with PaymentResult");
     try {
-        const result = await DotNet.invokeMethodAsync("UnionInteropSample", "HandlePaymentFromJS", { 
+        const result = await DotNet.invokeMethodAsync("UnionInteropValidation.Standalone", "HandlePaymentFromJS", { 
             transactionId: "TXN-JS-001",
             amount: 99.99,
             approvedAt: new Date().toISOString()
@@ -50,3 +50,4 @@ export async function callCSharpWithPayment() {
         return { error: error.message };
     }
 }
+

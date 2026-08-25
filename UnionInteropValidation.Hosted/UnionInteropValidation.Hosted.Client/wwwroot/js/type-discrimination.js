@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Type Discrimination - Compare property-based vs type-based discrimination
  * Demonstrates how to distinguish between cases with identical structures
  */
@@ -45,7 +45,7 @@ export function processTypeBased(result) {
 export async function callCSharpWithPropertyBased() {
     console.log("JS calling C# method with property-based union");
     try {
-        const result = await DotNet.invokeMethodAsync("UnionInteropValidationWasm.Client", "HandlePropertyBasedFromJS", { result: "success from JS" });
+        const result = await DotNet.invokeMethodAsync("UnionInteropValidation.Hosted.Client", "HandlePropertyBasedFromJS", { result: "success from JS" });
         console.log("C# response:", result);
         return result;
     } catch (error) {
@@ -57,7 +57,7 @@ export async function callCSharpWithPropertyBased() {
 export async function callCSharpWithTypeBased() {
     console.log("JS calling C# method with type-based union");
     try {
-        const result = await DotNet.invokeMethodAsync("UnionInteropValidationWasm.Client", "HandleTypeBasedFromJS", { result: "success from JS" });
+        const result = await DotNet.invokeMethodAsync("UnionInteropValidation.Hosted.Client", "HandleTypeBasedFromJS", { result: "success from JS" });
         console.log("C# response:", result);
         return result;
     } catch (error) {
@@ -65,3 +65,4 @@ export async function callCSharpWithTypeBased() {
         return { error: error.message };
     }
 }
+

@@ -1,5 +1,5 @@
-using UnionInteropValidationWasm.Client.Pages;
-using UnionInteropValidationWasm.Components;
+using UnionInteropValidation.Hosted.Client.Pages;
+using UnionInteropValidation.Hosted.Components;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,6 +21,6 @@ app.UseStatusCodePages();
 app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveWebAssemblyRenderMode()
-    .AddAdditionalAssemblies(typeof(UnionInteropValidationWasm.Client._Imports).Assembly);
+    .AddAdditionalAssemblies(typeof(UnionInteropValidation.Hosted.Client._Imports).Assembly);
 
 app.Run();

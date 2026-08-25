@@ -1,29 +1,29 @@
-@page "/type-discrimination"
+﻿@page "/type-discrimination"
 @inject IJSRuntime JS
 
-@using UnionInteropValidationServer.Models
+@using UnionInteropValidation.Server.Models
 
-<PageTitle>Test Case 13-17 - Type Discrimination Methods</PageTitle>
+<PageTitle>Type Discrimination Methods</PageTitle>
 
 <div class="container mt-5">
     <div class="row">
         <div class="col-md-10 mx-auto">
-            <h1>Test Case 13–17: Type Discrimination Methods (Property-Based vs. $type Classifier)</h1>
+            <h1>Type Discrimination Methods (Property-Based vs. $type Classifier)</h1>
 
             <div class="row">
                 <div class="col-md-6 mb-4">
                     <div class="card">
                         <div class="card-header bg-warning text-dark">
-                            <h5 class="mb-0">Test Case 13–14: Property-Based Discrimination</h5>
+                            <h5 class="mb-0">Property-Based Discrimination</h5>
                         </div>
                         <div class="card-body">
                             <p class="text-muted small">Detected by property existence or values</p>
                             <div class="d-grid gap-2">
                                 <button class="btn btn-warning btn-sm" @onclick="SendPBSuccess">
-                                    TC 13: First record type without JsonUnion classifier
+                                    First record type without JsonUnion classifier
                                 </button>
                                 <button class="btn btn-warning btn-sm" @onclick="SendPBError">
-                                    TC 14: Second record type without JsonUnion classifier
+                                    Second record type without JsonUnion classifier
                                 </button>
                             </div>
                         </div>
@@ -33,16 +33,16 @@
                 <div class="col-md-6 mb-4">
                     <div class="card">
                         <div class="card-header bg-success text-white">
-                            <h5 class="mb-0">Test Case 15–17: Type-Based Discrimination ($type Classifier)</h5>
+                            <h5 class="mb-0">Type-Based Discrimination ($type Classifier)</h5>
                         </div>
                         <div class="card-body">
                             <p class="text-muted small">Detected by $type field</p>
                             <div class="d-grid gap-2">
                                 <button class="btn btn-success btn-sm" @onclick="SendTBSuccess">
-                                    TC 15/23: First record type with JsonUnion classifier
+                                    First record type with JsonUnion classifier
                                 </button>
                                 <button class="btn btn-success btn-sm" @onclick="SendTBError">
-                                    TC 16/24: Second record type with JsonUnion classifier
+                                    Second record type with JsonUnion classifier
                                 </button>
                             </div>
                         </div>
@@ -58,13 +58,13 @@
                     <p class="text-muted">JavaScript calls C# method with union and returns result</p>
                     <div class="row">
                         <div class="col-md-6">
-                            <h6>TC 13-14: Property-Based</h6>
+                            <h6>Property-Based</h6>
                             <button class="btn btn-info btn-sm w-100" @onclick="CallCSharpWithPropertyBased">
                                 JS invokes .NET with PropertyBased union
                             </button>
                         </div>
                         <div class="col-md-6">
-                            <h6>TC 15-17: Type-Based</h6>
+                            <h6>Type-Based</h6>
                             <button class="btn btn-info btn-sm w-100" @onclick="CallCSharpWithTypeBased">
                                 JS invokes .NET with TypeBased ($type) union
                             </button>
@@ -221,3 +221,4 @@
         errorMsg = string.Empty;
     }
 }
+

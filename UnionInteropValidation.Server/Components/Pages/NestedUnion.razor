@@ -1,14 +1,14 @@
-@page "/nested-union"
+﻿@page "/nested-union"
 @inject IJSRuntime JS
 
-@using UnionInteropValidationServer.Models
+@using UnionInteropValidation.Server.Models
 
-<PageTitle>Test Case 04-06 - Nested Union in Container</PageTitle>
+<PageTitle>Nested Union in Container</PageTitle>
 
 <div class="container mt-5">
     <div class="row">
         <div class="col-md-10 mx-auto">
-            <h1>Test Case 04–06: Nested Union in Container Object</h1>
+            <h1>Nested Union in Container Object</h1>
 
             <div class="row">
                 <div class="col-md-6 mb-4">
@@ -19,10 +19,10 @@
                         <div class="card-body">
                             <div class="d-grid gap-2">
                                 <button class="btn btn-success btn-sm" @onclick="SendUserData">
-                                    TC 04-05: Nested union with null/int in UserData
+                                    Nested union with null/int in UserData
                                 </button>
                                 <button class="btn btn-success btn-sm" @onclick="SendErrorData">
-                                    TC 06: Nested union with string in ErrorData
+                                    Nested union with string in ErrorData
                                 </button>
                             </div>
                         </div>
@@ -37,7 +37,7 @@
                         <div class="card-body">
                             <div class="d-grid gap-2">
                                 <button class="btn btn-info btn-sm" @onclick="CallCSharpWithNestedUnion">
-                                    TC 11/16: Nested union round-trip (JS → .NET)
+                                    Nested union round-trip (JS → .NET)
                                 </button>
                             </div>
                         </div>
@@ -148,3 +148,4 @@
         errorMsg = string.Empty;
     }
 }
+

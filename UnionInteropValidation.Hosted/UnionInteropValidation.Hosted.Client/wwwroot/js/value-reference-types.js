@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Value & Reference Types - Test different fundamental types
  * Demonstrates that value types (int) and reference types (string) are properly distinguished
  */
@@ -47,7 +47,7 @@ export function processReferenceType(result) {
 export async function callCSharpWithValueType() {
     console.log("JS calling C# method with value type");
     try {
-        const result = await DotNet.invokeMethodAsync("UnionInteropValidationWasm.Client", "HandleValueTypeFromJS", { value: 777 });
+        const result = await DotNet.invokeMethodAsync("UnionInteropValidation.Hosted.Client", "HandleValueTypeFromJS", { value: 777 });
         console.log("C# response:", result);
         return result;
     } catch (error) {
@@ -59,7 +59,7 @@ export async function callCSharpWithValueType() {
 export async function callCSharpWithReferenceType() {
     console.log("JS calling C# method with reference type");
     try {
-        const result = await DotNet.invokeMethodAsync("UnionInteropValidationWasm.Client", "HandleReferenceTypeFromJS", { content: "from JS", metadata: "test" });
+        const result = await DotNet.invokeMethodAsync("UnionInteropValidation.Hosted.Client", "HandleReferenceTypeFromJS", { content: "from JS", metadata: "test" });
         console.log("C# response:", result);
         return result;
     } catch (error) {
@@ -67,3 +67,4 @@ export async function callCSharpWithReferenceType() {
         return { error: error.message };
     }
 }
+

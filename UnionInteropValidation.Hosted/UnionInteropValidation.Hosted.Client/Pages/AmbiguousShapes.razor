@@ -1,29 +1,29 @@
-@page "/ambiguous-shapes"
+﻿@page "/ambiguous-shapes"
 @inject IJSRuntime JS
 
-@using UnionInteropValidationWasm_Client.Models
+@using UnionInteropValidation.Hosted.Client.Models
 
-<PageTitle>Test Case 09-27 - Ambiguous Shapes & Classifier Methods</PageTitle>
+<PageTitle>Ambiguous Shapes & Classifier Methods</PageTitle>
 
 <div class="container mt-5">
     <div class="row">
         <div class="col-md-10 mx-auto">
-            <h1>Test Case 09–27: Ambiguous Shapes & Type Discriminator (With/Without $type Classifier)</h1>
+            <h1>Ambiguous Shapes & Type Discriminator (With/Without $type Classifier)</h1>
 
             <div class="row">
                 <div class="col-md-6 mb-4">
                     <div class="card">
                         <div class="card-header bg-warning text-dark">
-                            <h5 class="mb-0">Test Case 09–12: WITHOUT $type Classifier (Ambiguous)</h5>
+                            <h5 class="mb-0">WITHOUT $type Classifier (Ambiguous)</h5>
                         </div>
                         <div class="card-body">
                             <p class="text-muted small">Same JSON structure - deserialization may fail or choose wrong case</p>
                             <div class="d-grid gap-2">
                                 <button class="btn btn-warning btn-sm" @onclick="SendSimpleSuccess">
-                                    TC 09: Property-based ambiguity - SimpleSuccess
+                                    Property-based ambiguity - SimpleSuccess
                                 </button>
                                 <button class="btn btn-warning btn-sm" @onclick="SendSimpleError">
-                                    TC 11: Multiple matching cases - SimpleError
+                                    Multiple matching cases - SimpleError
                                 </button>
                             </div>
                         </div>
@@ -33,19 +33,19 @@
                 <div class="col-md-6 mb-4">
                     <div class="card">
                         <div class="card-header bg-success text-white">
-                            <h5 class="mb-0">Test Case 15–17: WITH $type Classifier (Resolved)</h5>
+                            <h5 class="mb-0">WITH $type Classifier (Resolved)</h5>
                         </div>
                         <div class="card-body">
                             <p class="text-muted small">$type field disambiguates the cases</p>
                             <div class="d-grid gap-2">
                                 <button class="btn btn-success btn-sm" @onclick="SendTaggedSuccess">
-                                    TC 15/23: Classifier resolves first record case
+                                    Classifier resolves first record case
                                 </button>
                                 <button class="btn btn-success btn-sm" @onclick="SendTaggedError">
-                                    TC 16/24: Classifier resolves second record case
+                                    Classifier resolves second record case
                                 </button>
                                 <button class="btn btn-info btn-sm" @onclick="CallCSharpWithAmbiguous">
-                                    TC 25: Classifier takes precedence over ambiguity
+                                    Classifier takes precedence over ambiguity
                                 </button>
                             </div>
                         </div>
@@ -180,3 +180,4 @@
         errorMsg = string.Empty;
     }
 }
+

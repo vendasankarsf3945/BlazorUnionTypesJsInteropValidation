@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace UnionInteropValidationServer.Models;
+namespace UnionInteropValidation.Server.Models;
 
 // 1. UNAMBIGUOUS UNION - Different primitive types distinguish cases
 public record class UnambiguousInt(int Value);

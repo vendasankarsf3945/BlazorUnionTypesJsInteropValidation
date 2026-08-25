@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Nullable Union - Test null as active case
  * Demonstrates that null values in union properties round-trip correctly
  */
@@ -24,7 +24,7 @@ export function processNullable(unionData) {
 export async function callCSharpWithNullableUnion() {
     console.log("JS calling C# method with NullableUnion (value = 42)");
     try {
-        const result = await DotNet.invokeMethodAsync("UnionInteropValidationServer", "HandleNullableFromJS", { message: "from JS", value: 42 });
+        const result = await DotNet.invokeMethodAsync("UnionInteropValidation.Server", "HandleNullableFromJS", { message: "from JS", value: 42 });
         console.log("C# response:", result);
         return result;
     } catch (error) {
@@ -36,7 +36,7 @@ export async function callCSharpWithNullableUnion() {
 export async function callCSharpWithNullValue() {
     console.log("JS calling C# method with NullableUnion (value = null)");
     try {
-        const result = await DotNet.invokeMethodAsync("UnionInteropValidationServer", "HandleNullableFromJS", { message: "from JS", value: null });
+        const result = await DotNet.invokeMethodAsync("UnionInteropValidation.Server", "HandleNullableFromJS", { message: "from JS", value: null });
         console.log("C# response:", result);
         return result;
     } catch (error) {

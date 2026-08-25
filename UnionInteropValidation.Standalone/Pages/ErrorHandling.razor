@@ -1,34 +1,33 @@
-@page "/error-handling"
+﻿@page "/error-handling"
 @inject IJSRuntime JS
 
-@using UnionInteropSample.Models
+@using UnionInteropValidation.Standalone.Models
 
-<PageTitle>Test Case 03 & 14 - Error Handling & Invalid JSON</PageTitle>
+<PageTitle>Error Handling & Invalid JSON</PageTitle>
 
 <div class="container mt-5">
     <div class="row">
         <div class="col-md-10 mx-auto">
-            <h1>Test Case 03 & 14: Error Handling & Invalid JSON - Union Deserialization Failures</h1>
+            <h1>Error Handling & Invalid JSON - Union Deserialization</h1>
 
             <!-- Scenario 03: InvalidJson_NoMatchingUnionCase -->
             <div class="row mt-4">
                 <div class="col-md-12 mb-4">
                     <div class="card border-danger">
                         <div class="card-header bg-danger text-white">
-                            <span class="badge bg-dark float-end">Test Case 07-10</span>
-                            <h5 class="mb-0">Scenario 03: InvalidJson_NoMatchingUnionCase</h5>
+                            <h5 class="mb-0">Scenario: InvalidJson_NoMatchingUnionCase</h5>
                             <small>Test error handling when JSON doesn't match any union case</small>
                         </div>
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-md-6">
-                                    <h6 class="mt-3">TC 07: Missing Required Property</h6>
+                                    <h6 class="mt-3">Missing Required Property</h6>
                                     <button class="btn btn-danger btn-sm" @onclick="MissingProperty">
                                         Test: {} (Empty Object)
                                     </button>
                                 </div>
                                 <div class="col-md-6">
-                                    <h6 class="mt-3">TC 08: Invalid Type</h6>
+                                    <h6 class="mt-3">Invalid Type</h6>
                                     <button class="btn btn-danger btn-sm" @onclick="InvalidType">
                                         Test: {value: 12345} (Wrong Type)
                                     </button>
@@ -36,13 +35,13 @@
                             </div>
                             <div class="row mt-3">
                                 <div class="col-md-6">
-                                    <h6>TC 09: Ambiguous Without Classifier</h6>
+                                    <h6>Ambiguous Without Classifier</h6>
                                     <button class="btn btn-danger btn-sm" @onclick="AmbiguousNoClassifier">
                                         Test: {message: "x"} (Ambiguous)
                                     </button>
                                 </div>
                                 <div class="col-md-6">
-                                    <h6>TC 10: Completely Invalid JSON</h6>
+                                    <h6>Completely Invalid JSON</h6>
                                     <button class="btn btn-danger btn-sm" @onclick="CompletelyInvalid">
                                         Test: {random: "x"} (No Match)
                                     </button>
@@ -58,20 +57,19 @@
                 <div class="col-md-12 mb-4">
                     <div class="card border-danger">
                         <div class="card-header bg-danger text-white">
-                            <span class="badge bg-dark float-end">Test Case 17-22</span>
-                            <h5 class="mb-0">Scenario 14: InvalidJson_ErrorReporting</h5>
+                            <h5 class="mb-0">Scenario: InvalidJson_ErrorReporting</h5>
                             <small>Test structured error responses and validation messages</small>
                         </div>
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-md-6">
-                                    <h6 class="mt-3">TC 19: Missing Required Field Validation</h6>
+                                    <h6 class="mt-3">Missing Required Field Validation</h6>
                                     <button class="btn btn-danger btn-sm" @onclick="FieldValidation">
                                         Test: Field Missing Error
                                     </button>
                                 </div>
                                 <div class="col-md-6">
-                                    <h6 class="mt-3">TC 20: Type Mismatch Validation</h6>
+                                    <h6 class="mt-3">Type Mismatch Validation</h6>
                                     <button class="btn btn-danger btn-sm" @onclick="TypeMismatch">
                                         Test: Type Mismatch Error
                                     </button>
@@ -79,13 +77,13 @@
                             </div>
                             <div class="row mt-3">
                                 <div class="col-md-6">
-                                    <h6>TC 21: No Matching Union Case Validation</h6>
+                                    <h6>No Matching Union Case Validation</h6>
                                     <button class="btn btn-danger btn-sm" @onclick="NoMatchingCase">
                                         Test: No Matching Case Error
                                     </button>
                                 </div>
                                 <div class="col-md-6">
-                                    <h6>TC 22: Malformed JSON Validation</h6>
+                                    <h6>Malformed JSON Validation</h6>
                                     <button class="btn btn-danger btn-sm" @onclick="MalformedJson">
                                         Test: Malformed JSON Error
                                     </button>
@@ -146,7 +144,7 @@
         }
     }
 
-    // Scenario 03 Tests
+    // Error handling tests
 
     private async Task MissingProperty()
     {
@@ -160,7 +158,7 @@
         }
         catch (Exception ex)
         {
-            errorMsg = $"TC 07 - Missing Required Property Error:\n{ex.Message}\n\nThis error occurs when required fields are missing from the JSON structure.";
+            errorMsg = $"Missing Required Property Error:\n{ex.Message}\n\nThis error occurs when required fields are missing from the JSON structure.";
             validationMsg = $"Expected fields not found. Cannot deserialize to any union case.";
         }
     }
@@ -176,7 +174,7 @@
         }
         catch (Exception ex)
         {
-            errorMsg = $"TC 08 - Invalid Type Error:\n{ex.Message}\n\nJSON type doesn't match any union case type requirements.";
+            errorMsg = $"Invalid Type Error:\n{ex.Message}\n\nJSON type doesn't match any union case type requirements.";
             validationMsg = $"Type mismatch: Expected string or record, got integer.";
         }
     }
@@ -192,7 +190,7 @@
         }
         catch (Exception ex)
         {
-            errorMsg = $"TC 09 - Ambiguous Without Classifier Error:\n{ex.Message}\n\nJSON matches multiple union cases but no classifier ($type) to disambiguate.";
+            errorMsg = $"Ambiguous Without Classifier Error:\n{ex.Message}\n\nJSON matches multiple union cases but no classifier ($type) to disambiguate.";
             validationMsg = $"Ambiguous case match: Could deserialize to SimpleSuccess or SimpleError.\nUse [JsonUnion] classifier to resolve.";
         }
     }
@@ -208,7 +206,7 @@
         }
         catch (Exception ex)
         {
-            errorMsg = $"TC 10 - Completely Invalid JSON Error:\n{ex.Message}\n\nJSON structure doesn't match any union case pattern.";
+            errorMsg = $"Completely Invalid JSON Error:\n{ex.Message}\n\nJSON structure doesn't match any union case pattern.";
             validationMsg = $"No matching union case found. JSON structure is completely incompatible with all union types.";
         }
     }
@@ -226,7 +224,7 @@
         }
         catch (Exception ex)
         {
-            errorMsg = $"TC 19 - Missing Required Field Validation Error:\n{ex.Message}";
+            errorMsg = $"Missing Required Field Validation Error:\n{ex.Message}";
             validationMsg = $"Validation Errors:\n  • Field 'message' is required\n  • Field 'message' cannot be null or empty";
         }
     }
@@ -242,7 +240,7 @@
         }
         catch (Exception ex)
         {
-            errorMsg = $"TC 20 - Type Mismatch Validation Error:\n{ex.Message}";
+            errorMsg = $"Type Mismatch Validation Error:\n{ex.Message}";
             validationMsg = $"Type Validation Errors:\n  • Field 'message': Expected string, got number\n  • Field 'code': Expected number, got string";
         }
     }
@@ -258,7 +256,7 @@
         }
         catch (Exception ex)
         {
-            errorMsg = $"TC 21 - No Matching Union Case Validation Error:\n{ex.Message}";
+            errorMsg = $"No Matching Union Case Validation Error:\n{ex.Message}";
             validationMsg = $"Deserialization Failed:\n  • No union case matched the provided JSON\n  • Tried matching against: Success, Error, Redirect\n  • All cases returned validation errors";
         }
     }
@@ -274,7 +272,7 @@
         }
         catch (Exception ex)
         {
-            errorMsg = $"TC 22 - Malformed JSON Validation Error:\n{ex.Message}";
+            errorMsg = $"Malformed JSON Validation Error:\n{ex.Message}";
             validationMsg = $"JSON Parse Error:\n  • Invalid JSON format\n  • Line 1, Column 5: Unexpected token\n  • Expected: '{{', got: 'undefined'";
         }
     }
@@ -378,3 +376,4 @@
         }
     }
 }
+

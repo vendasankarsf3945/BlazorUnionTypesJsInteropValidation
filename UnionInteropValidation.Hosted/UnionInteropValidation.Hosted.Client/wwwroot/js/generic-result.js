@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Generic Result - Test Result<T> with different type parameters
  * Demonstrates generic union types work with any type parameter
  */
@@ -27,7 +27,7 @@ export function processResult(result) {
 export async function callCSharpWithResult() {
     console.log("JS calling C# method with Result<T>");
     try {
-        const result = await DotNet.invokeMethodAsync("UnionInteropValidationWasm.Client", "HandleResultFromJS", { message: "Error from JS" });
+        const result = await DotNet.invokeMethodAsync("UnionInteropValidation.Hosted.Client", "HandleResultFromJS", { message: "Error from JS" });
         console.log("C# response:", result);
         return result;
     } catch (error) {
@@ -39,7 +39,7 @@ export async function callCSharpWithResult() {
 export async function callCSharpWithResultString() {
     console.log("JS calling C# method with Result<string> - Ok case");
     try {
-        const result = await DotNet.invokeMethodAsync("UnionInteropValidationWasm.Client", "HandleResultFromJS", { value: "Success from JS" });
+        const result = await DotNet.invokeMethodAsync("UnionInteropValidation.Hosted.Client", "HandleResultFromJS", { value: "Success from JS" });
         console.log("C# response:", result);
         return result;
     } catch (error) {
@@ -51,7 +51,7 @@ export async function callCSharpWithResultString() {
 export async function callCSharpWithResultInt() {
     console.log("JS calling C# method with Result<int> - Ok case");
     try {
-        const result = await DotNet.invokeMethodAsync("UnionInteropValidationWasm.Client", "HandleResultFromJS", { value: 999 });
+        const result = await DotNet.invokeMethodAsync("UnionInteropValidation.Hosted.Client", "HandleResultFromJS", { value: 999 });
         console.log("C# response:", result);
         return result;
     } catch (error) {
@@ -59,3 +59,4 @@ export async function callCSharpWithResultInt() {
         return { error: error.message };
     }
 }
+

@@ -1,14 +1,14 @@
-@page "/unambiguous-union"
+﻿@page "/unambiguous-union"
 @inject IJSRuntime JS
 
-@using UnionInteropValidationWasm_Client.Models
+@using UnionInteropValidation.Hosted.Client.Models
 
-<PageTitle>Test Case 02-03 - Primitive Union Type Round-Trip</PageTitle>
+<PageTitle>Primitive Union Type Round-Trip</PageTitle>
 
 <div class="container mt-5">
     <div class="row">
         <div class="col-md-10 mx-auto">
-            <h1>Test Case 02–03: Primitive Union Type Round-Trip (int, string)</h1>
+            <h1>Primitive Union Type Round-Trip (int, string)</h1>
 
             <div class="card mb-4">
                 <div class="card-header bg-success text-white">
@@ -18,10 +18,10 @@
                     <p class="text-muted">Send union from C# to JavaScript and observe the JSON format</p>
                     <div class="d-grid gap-2">
                         <button class="btn btn-success" @onclick="SendIntToJS">
-                            TC 02: Integer case arrives as number (Send int 42)
+                            Integer case arrives as number (Send int 42)
                         </button>
                         <button class="btn btn-success" @onclick="SendStringToJS">
-                            TC 03: String case arrives as string (Send "hello")
+                            String case arrives as string (Send "hello")
                         </button>
                     </div>
                 </div>
@@ -35,10 +35,10 @@
                     <p class="text-muted">JavaScript calls C# method with union and returns result</p>
                     <div class="d-grid gap-2">
                         <button class="btn btn-info" @onclick="ReceiveIntFromJS">
-                            TC 06: Integer union round-trip (JS → .NET)
+                            Integer union round-trip (JS → .NET)
                         </button>
                         <button class="btn btn-info" @onclick="ReceiveStringFromJS">
-                            TC 07: String union round-trip (JS → .NET)
+                            String union round-trip (JS → .NET)
                         </button>
                     </div>
                 </div>
@@ -155,3 +155,4 @@
         errorMsg = string.Empty;
     }
 }
+

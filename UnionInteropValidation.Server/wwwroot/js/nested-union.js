@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Nested Union - Test union inside container
  * Demonstrates that unions nested in container objects serialize correctly
  */
@@ -32,7 +32,7 @@ export function processNested(containerData) {
 export async function callCSharpWithNestedUnion() {
     console.log("JS calling C# method with nested union");
     try {
-        const result = await DotNet.invokeMethodAsync("UnionInteropValidationServer", "HandleNestedFromJS", { 
+        const result = await DotNet.invokeMethodAsync("UnionInteropValidation.Server", "HandleNestedFromJS", { 
             id: "test-123",
             payload: { name: "John", email: "john@example.com" }
         });

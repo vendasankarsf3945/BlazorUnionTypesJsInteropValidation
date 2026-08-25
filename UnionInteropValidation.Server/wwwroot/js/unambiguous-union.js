@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Unambiguous Union - Test int vs string unions
  * Demonstrates that different JSON types (number vs string) are self-discriminating
  */
@@ -20,7 +20,7 @@ export function processUnambiguous(unionData) {
 export async function receiveInt() {
     console.log("JS calling C# method with UnambiguousInt");
     try {
-        const result = await DotNet.invokeMethodAsync("UnionInteropValidationServer", "HandleUnambiguousFromJS", { value: 99 });
+        const result = await DotNet.invokeMethodAsync("UnionInteropValidation.Server", "HandleUnambiguousFromJS", { value: 99 });
         console.log("C# response:", result);
         return result;
     } catch (error) {
@@ -32,7 +32,7 @@ export async function receiveInt() {
 export async function receiveString() {
     console.log("JS calling C# method with UnambiguousString");
     try {
-        const result = await DotNet.invokeMethodAsync("UnionInteropValidationServer", "HandleUnambiguousFromJS", { value: "from javascript" });
+        const result = await DotNet.invokeMethodAsync("UnionInteropValidation.Server", "HandleUnambiguousFromJS", { value: "from javascript" });
         console.log("C# response:", result);
         return result;
     } catch (error) {

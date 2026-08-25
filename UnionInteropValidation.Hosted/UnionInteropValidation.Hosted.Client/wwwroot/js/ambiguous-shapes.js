@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Ambiguous Shapes - Test with/without JsonUnion classifier
  * Demonstrates the difference between ambiguous and clarified union cases
  */
@@ -48,7 +48,7 @@ export function processTagged(unionData) {
 export async function callCSharpWithAmbiguous() {
     console.log("JS calling C# method with ambiguous union");
     try {
-        const result = await DotNet.invokeMethodAsync("UnionInteropValidationWasm.Client", "HandleAmbiguousFromJS", { value: "success" });
+        const result = await DotNet.invokeMethodAsync("UnionInteropValidation.Hosted.Client", "HandleAmbiguousFromJS", { value: "success" });
         console.log("C# response:", result);
         return result;
     } catch (error) {

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Multi-Case Union - Test 3+ distinct cases
  * Demonstrates API response handling with multiple outcome types
  */
@@ -36,7 +36,7 @@ export function processApiResponse(response) {
 export async function callCSharpWithApiResponse() {
     console.log("JS calling C# method with ApiResponse");
     try {
-        const result = await DotNet.invokeMethodAsync("UnionInteropValidationServer", "HandleApiResponseFromJS", { 
+        const result = await DotNet.invokeMethodAsync("UnionInteropValidation.Server", "HandleApiResponseFromJS", { 
             statusCode: 200,
             data: "Success from JS",
             timestamp: new Date().toISOString()
