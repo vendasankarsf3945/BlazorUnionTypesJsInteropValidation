@@ -1,0 +1,150 @@
+@page "/nested-union"
+@inject IJSRuntime JS
+
+@using UnionInteropValidationServer.Models
+
+<PageTitle>Test Case 04-06 - Nested Union in Container</PageTitle>
+
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-10 mx-auto">
+            <h1>Test Case 04–06: Nested Union in Container Object</h1>
+
+            <div class="row">
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0">C# → JavaScript</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-success btn-sm" @onclick="SendUserData">
+                                    TC 04-05: Nested union with null/int in UserData
+                                </button>
+                                <button class="btn btn-success btn-sm" @onclick="SendErrorData">
+                                    TC 06: Nested union with string in ErrorData
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="mb-0">JavaScript → C#</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-info btn-sm" @onclick="CallCSharpWithNestedUnion">
+                                    TC 11/16: Nested union round-trip (JS → .NET)
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @if (!string.IsNullOrEmpty(result))
+            {
+                <div class="alert alert-success mt-4">
+                    <h6>Result:</h6>
+                    <pre>@result</pre>
+                </div>
+            }
+
+            @if (!string.IsNullOrEmpty(errorMsg))
+            {
+                <div class="alert alert-danger mt-4">
+                    <h6>Error:</h6>
+                    <p>@errorMsg</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    private string result = string.Empty;
+    private string errorMsg = string.Empty;
+    private IJSObjectReference? module;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                module = await JS.InvokeAsync<IJSObjectReference>(
+                    "import", "./js/nested-union.js");
+            }
+            catch (Exception ex)
+            {
+                errorMsg = $"Failed to load module: {ex.Message}";
+            }
+        }
+    }
+
+    private async Task SendUserData()
+    {
+        try
+        {
+            ClearMessages();
+            var container = new Container
+            {
+                Payload = new UserData("John Doe", "john@example.com")
+            };
+            dynamic jsResult = await module!.InvokeAsync<dynamic>("processNested", container);
+            result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+        }
+        catch (Exception ex)
+        {
+            errorMsg = ex.Message;
+        }
+    }
+
+    private async Task SendErrorData()
+    {
+        try
+        {
+            ClearMessages();
+            var container = new Container
+            {
+                Payload = new ErrorData("ERR_001", "Operation failed")
+            };
+            dynamic jsResult = await module!.InvokeAsync<dynamic>("processNested", container);
+            result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+        }
+        catch (Exception ex)
+        {
+            errorMsg = ex.Message;
+        }
+    }
+
+    private async Task CallCSharpWithNestedUnion()
+    {
+        try
+        {
+            ClearMessages();
+            dynamic jsResult = await module!.InvokeAsync<dynamic>("callCSharpWithNestedUnion");
+            result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+        }
+        catch (Exception ex)
+        {
+            errorMsg = ex.Message;
+        }
+    }
+
+    [JSInvokable]
+    public static object HandleNestedFromJS(object containerData)
+    {
+        Console.WriteLine($"C# received from JS: {System.Text.Json.JsonSerializer.Serialize(containerData)}");
+        return new { status = "received from JS", data = containerData, receivedType = containerData?.GetType().Name };
+    }
+
+    private void ClearMessages()
+    {
+        result = string.Empty;
+        errorMsg = string.Empty;
+    }
+}

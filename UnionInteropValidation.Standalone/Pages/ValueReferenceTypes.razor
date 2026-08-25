@@ -1,0 +1,223 @@
+@page "/value-reference-types"
+@inject IJSRuntime JS
+
+@using UnionInteropSample.Models
+
+<PageTitle>Value vs. Reference Type Unions</PageTitle>
+
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-10 mx-auto">
+            <h1>Value vs. Reference Type Unions (int vs. string Discrimination)</h1>
+
+            <div class="row">
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-header bg-warning text-dark">
+                            <h5 class="mb-0">Value Types (int)</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-muted small mt-2">Primitive value type discrimination</p>
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-success btn-sm" @onclick="SendIntSuccess">
+                                    IntSuccess(123)
+                                </button>
+                                <button class="btn btn-danger btn-sm" @onclick="SendIntError">
+                                    IntError("failed")
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="mb-0">Reference Types (string)</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-muted small mt-2">Reference type with multiple properties</p>
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-success btn-sm" @onclick="SendStringSuccess">
+                                    StringSuccess("data", "meta")
+                                </button>
+                                <button class="btn btn-warning btn-sm" @onclick="SendStringEmpty">
+                                    StringEmpty
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">JavaScript → C#</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">JavaScript calls C# method with union and returns result</p>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Value Types</h6>
+                            <button class="btn btn-info btn-sm w-100" @onclick="CallCSharpWithValueType">
+                                Call C# with IntResult from JS
+                            </button>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Reference Types</h6>
+                            <button class="btn btn-info btn-sm w-100" @onclick="CallCSharpWithReferenceType">
+                                Call C# with StringResult from JS
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @if (!string.IsNullOrEmpty(result))
+            {
+                <div class="alert alert-success mt-4">
+                    <h6>Result:</h6>
+                    <pre>@result</pre>
+                </div>
+            }
+
+            @if (!string.IsNullOrEmpty(errorMsg))
+            {
+                <div class="alert alert-danger mt-4">
+                    <h6>Error:</h6>
+                    <p>@errorMsg</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    private string result = string.Empty;
+    private string errorMsg = string.Empty;
+    private IJSObjectReference? module;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                module = await JS.InvokeAsync<IJSObjectReference>(
+                    "import", "./js/value-reference-types.js");
+            }
+            catch (Exception ex)
+            {
+                errorMsg = $"Failed to load module: {ex.Message}";
+            }
+        }
+    }
+
+    private async Task SendIntSuccess()
+    {
+        try
+        {
+            ClearMessages();
+            var unionData = new IntSuccess(123);
+            dynamic jsResult = await module!.InvokeAsync<dynamic>("processValueType", unionData);
+            result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+        }
+        catch (Exception ex)
+        {
+            errorMsg = ex.Message;
+        }
+    }
+
+    private async Task SendIntError()
+    {
+        try
+        {
+            ClearMessages();
+            var unionData = new IntError("Operation failed");
+            dynamic jsResult = await module!.InvokeAsync<dynamic>("processValueType", unionData);
+            result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+        }
+        catch (Exception ex)
+        {
+            errorMsg = ex.Message;
+        }
+    }
+
+    private async Task SendStringSuccess()
+    {
+        try
+        {
+            ClearMessages();
+            var unionData = new StringSuccess("Hello World", "greeting");
+            dynamic jsResult = await module!.InvokeAsync<dynamic>("processReferenceType", unionData);
+            result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+        }
+        catch (Exception ex)
+        {
+            errorMsg = ex.Message;
+        }
+    }
+
+    private async Task SendStringEmpty()
+    {
+        try
+        {
+            ClearMessages();
+            var unionData = new StringEmpty();
+            dynamic jsResult = await module!.InvokeAsync<dynamic>("processReferenceType", unionData);
+            result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+        }
+        catch (Exception ex)
+        {
+            errorMsg = ex.Message;
+        }
+    }
+
+    private async Task CallCSharpWithValueType()
+    {
+        try
+        {
+            ClearMessages();
+            dynamic jsResult = await module!.InvokeAsync<dynamic>("callCSharpWithValueType");
+            result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+        }
+        catch (Exception ex)
+        {
+            errorMsg = ex.Message;
+        }
+    }
+
+    private async Task CallCSharpWithReferenceType()
+    {
+        try
+        {
+            ClearMessages();
+            dynamic jsResult = await module!.InvokeAsync<dynamic>("callCSharpWithReferenceType");
+            result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+        }
+        catch (Exception ex)
+        {
+            errorMsg = ex.Message;
+        }
+    }
+
+    [JSInvokable]
+    public static object HandleValueTypeFromJS(object valueTypeData)
+    {
+        Console.WriteLine($"C# received from JS: {System.Text.Json.JsonSerializer.Serialize(valueTypeData)}");
+        return new { status = "received from JS", data = valueTypeData, receivedType = valueTypeData?.GetType().Name };
+    }
+
+    [JSInvokable]
+    public static object HandleReferenceTypeFromJS(object referenceTypeData)
+    {
+        Console.WriteLine($"C# received from JS: {System.Text.Json.JsonSerializer.Serialize(referenceTypeData)}");
+        return new { status = "received from JS", data = referenceTypeData, receivedType = referenceTypeData?.GetType().Name };
+    }
+
+    private void ClearMessages()
+    {
+        result = string.Empty;
+        errorMsg = string.Empty;
+    }
+}

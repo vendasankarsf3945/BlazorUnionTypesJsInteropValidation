@@ -1,0 +1,163 @@
+@page "/multi-case-union"
+@inject IJSRuntime JS
+
+@using UnionInteropValidationWasm_Client.Models
+
+<PageTitle>Test Case 07-08 - Multi-Case Union ApiResponse</PageTitle>
+
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-10 mx-auto">
+            <h1>Test Case 07–08: Multi-Case Union (3+ Cases - ApiResponse)</h1>
+
+
+            <div class="row">
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0">C# → JavaScript</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-success btn-sm" @onclick="SendSuccess">
+                                    TC 03: Success record transmitted without wrapper object (200)
+                                </button>
+                                <button class="btn btn-danger btn-sm" @onclick="SendFailure">
+                                    TC 04: Failure record transmitted without wrapper object (500)
+                                </button>
+                                <button class="btn btn-warning btn-sm" @onclick="SendRedirect">
+                                    TC 05: Redirect record transmitted without wrapper object (302)
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="mb-0">JavaScript → C#</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-info btn-sm" @onclick="CallCSharpWithApiResponse">
+                                    TC 08/14: Record union round-trip (JS → .NET)
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @if (!string.IsNullOrEmpty(result))
+            {
+                <div class="alert alert-success mt-4">
+                    <h6>Result:</h6>
+                    <pre>@result</pre>
+                </div>
+            }
+
+            @if (!string.IsNullOrEmpty(errorMsg))
+            {
+                <div class="alert alert-danger mt-4">
+                    <h6>Error:</h6>
+                    <p>@errorMsg</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    private string result = string.Empty;
+    private string errorMsg = string.Empty;
+    private IJSObjectReference? module;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                module = await JS.InvokeAsync<IJSObjectReference>(
+                    "import", "./js/multi-case-union.js");
+            }
+            catch (Exception ex)
+            {
+                errorMsg = $"Failed to load module: {ex.Message}";
+            }
+        }
+    }
+
+    private async Task SendSuccess()
+    {
+        try
+        {
+            ClearMessages();
+            var response = new SuccessResponse(200, "Operation successful", DateTime.UtcNow);
+            dynamic jsResult = await module!.InvokeAsync<dynamic>("processApiResponse", response);
+            result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+        }
+        catch (Exception ex)
+        {
+            errorMsg = ex.Message;
+        }
+    }
+
+    private async Task SendFailure()
+    {
+        try
+        {
+            ClearMessages();
+            var response = new FailureResponse(500, "Internal server error", "ERR_INTERNAL");
+            dynamic jsResult = await module!.InvokeAsync<dynamic>("processApiResponse", response);
+            result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+        }
+        catch (Exception ex)
+        {
+            errorMsg = ex.Message;
+        }
+    }
+
+    private async Task SendRedirect()
+    {
+        try
+        {
+            ClearMessages();
+            var response = new RedirectResponse("https://example.com/new-location", 302);
+            dynamic jsResult = await module!.InvokeAsync<dynamic>("processApiResponse", response);
+            result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+        }
+        catch (Exception ex)
+        {
+            errorMsg = ex.Message;
+        }
+    }
+
+    private async Task CallCSharpWithApiResponse()
+    {
+        try
+        {
+            ClearMessages();
+            dynamic jsResult = await module!.InvokeAsync<dynamic>("callCSharpWithApiResponse");
+            result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+        }
+        catch (Exception ex)
+        {
+            errorMsg = ex.Message;
+        }
+    }
+
+    [JSInvokable]
+    public static object HandleApiResponseFromJS(object apiResponse)
+    {
+        Console.WriteLine($"C# received from JS: {System.Text.Json.JsonSerializer.Serialize(apiResponse)}");
+        return new { status = "received from JS", data = apiResponse, receivedType = apiResponse?.GetType().Name };
+    }
+
+    private void ClearMessages()
+    {
+        result = string.Empty;
+        errorMsg = string.Empty;
+    }
+}

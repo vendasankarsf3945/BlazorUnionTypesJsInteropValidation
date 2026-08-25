@@ -1,0 +1,223 @@
+@page "/type-discrimination"
+@inject IJSRuntime JS
+
+@using UnionInteropValidationWasm_Client.Models
+
+<PageTitle>Test Case 13-17 - Type Discrimination Methods</PageTitle>
+
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-10 mx-auto">
+            <h1>Test Case 13–17: Type Discrimination Methods (Property-Based vs. $type Classifier)</h1>
+
+            <div class="row">
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-header bg-warning text-dark">
+                            <h5 class="mb-0">Test Case 13–14: Property-Based Discrimination</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-muted small">Detected by property existence or values</p>
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-warning btn-sm" @onclick="SendPBSuccess">
+                                    TC 13: First record type without JsonUnion classifier
+                                </button>
+                                <button class="btn btn-warning btn-sm" @onclick="SendPBError">
+                                    TC 14: Second record type without JsonUnion classifier
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0">Test Case 15–17: Type-Based Discrimination ($type Classifier)</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-muted small">Detected by $type field</p>
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-success btn-sm" @onclick="SendTBSuccess">
+                                    TC 15/23: First record type with JsonUnion classifier
+                                </button>
+                                <button class="btn btn-success btn-sm" @onclick="SendTBError">
+                                    TC 16/24: Second record type with JsonUnion classifier
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">JavaScript → C#</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">JavaScript calls C# method with union and returns result</p>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>TC 13-14: Property-Based</h6>
+                            <button class="btn btn-info btn-sm w-100" @onclick="CallCSharpWithPropertyBased">
+                                JS invokes .NET with PropertyBased union
+                            </button>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>TC 15-17: Type-Based</h6>
+                            <button class="btn btn-info btn-sm w-100" @onclick="CallCSharpWithTypeBased">
+                                JS invokes .NET with TypeBased ($type) union
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @if (!string.IsNullOrEmpty(result))
+            {
+                <div class="alert alert-success mt-4">
+                    <h6>Result:</h6>
+                    <pre>@result</pre>
+                </div>
+            }
+
+            @if (!string.IsNullOrEmpty(errorMsg))
+            {
+                <div class="alert alert-danger mt-4">
+                    <h6>Error:</h6>
+                    <p>@errorMsg</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    private string result = string.Empty;
+    private string errorMsg = string.Empty;
+    private IJSObjectReference? module;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                module = await JS.InvokeAsync<IJSObjectReference>(
+                    "import", "./js/type-discrimination.js");
+            }
+            catch (Exception ex)
+            {
+                errorMsg = $"Failed to load module: {ex.Message}";
+            }
+        }
+    }
+
+    private async Task SendPBSuccess()
+    {
+        try
+        {
+            ClearMessages();
+            var unionData = new PBSuccess("Operation succeeded");
+            dynamic jsResult = await module!.InvokeAsync<dynamic>("processPropertyBased", unionData);
+            result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+        }
+        catch (Exception ex)
+        {
+            errorMsg = ex.Message;
+        }
+    }
+
+    private async Task SendPBError()
+    {
+        try
+        {
+            ClearMessages();
+            var unionData = new PBError("Operation failed");
+            dynamic jsResult = await module!.InvokeAsync<dynamic>("processPropertyBased", unionData);
+            result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+        }
+        catch (Exception ex)
+        {
+            errorMsg = ex.Message;
+        }
+    }
+
+    private async Task SendTBSuccess()
+    {
+        try
+        {
+            ClearMessages();
+            var unionData = new TBSuccess("Operation succeeded");
+            dynamic jsResult = await module!.InvokeAsync<dynamic>("processTypeBased", unionData);
+            result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+        }
+        catch (Exception ex)
+        {
+            errorMsg = ex.Message;
+        }
+    }
+
+    private async Task SendTBError()
+    {
+        try
+        {
+            ClearMessages();
+            var unionData = new TBError("Operation failed");
+            dynamic jsResult = await module!.InvokeAsync<dynamic>("processTypeBased", unionData);
+            result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+        }
+        catch (Exception ex)
+        {
+            errorMsg = ex.Message;
+        }
+    }
+
+    private async Task CallCSharpWithPropertyBased()
+    {
+        try
+        {
+            ClearMessages();
+            dynamic jsResult = await module!.InvokeAsync<dynamic>("callCSharpWithPropertyBased");
+            result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+        }
+        catch (Exception ex)
+        {
+            errorMsg = ex.Message;
+        }
+    }
+
+    private async Task CallCSharpWithTypeBased()
+    {
+        try
+        {
+            ClearMessages();
+            dynamic jsResult = await module!.InvokeAsync<dynamic>("callCSharpWithTypeBased");
+            result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+        }
+        catch (Exception ex)
+        {
+            errorMsg = ex.Message;
+        }
+    }
+
+    [JSInvokable]
+    public static object HandlePropertyBasedFromJS(object propertyBased)
+    {
+        Console.WriteLine($"C# received from JS: {System.Text.Json.JsonSerializer.Serialize(propertyBased)}");
+        return new { status = "received from JS", data = propertyBased, receivedType = propertyBased?.GetType().Name };
+    }
+
+    [JSInvokable]
+    public static object HandleTypeBasedFromJS(object typeBased)
+    {
+        Console.WriteLine($"C# received from JS: {System.Text.Json.JsonSerializer.Serialize(typeBased)}");
+        return new { status = "received from JS", data = typeBased, receivedType = typeBased?.GetType().Name };
+    }
+
+    private void ClearMessages()
+    {
+        result = string.Empty;
+        errorMsg = string.Empty;
+    }
+}

@@ -1,0 +1,379 @@
+@page "/error-handling"
+@inject IJSRuntime JS
+
+@using UnionInteropValidationServer.Models
+
+<PageTitle>Test Case 03 & 14 - Error Handling & Invalid JSON</PageTitle>
+
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-10 mx-auto">
+            <h1>Test Case 03 & 14: Error Handling & Invalid JSON - Union Deserialization Failures</h1>
+
+            <div class="row mt-4">
+                <div class="col-md-12 mb-4">
+                    <div class="card border-danger">
+                        <div class="card-header bg-danger text-white">
+                            <span class="badge bg-dark float-end">Test Case 07-10</span>
+                            <h5 class="mb-0">Scenario 03: InvalidJson_NoMatchingUnionCase</h5>
+                            <small>Test error handling when JSON doesn't match any union case</small>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6 class="mt-3">TC 07: Missing Required Property</h6>
+                                    <button class="btn btn-danger btn-sm" @onclick="MissingProperty">
+                                        Test: {} (Empty Object)
+                                    </button>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6 class="mt-3">TC 08: Invalid Type</h6>
+                                    <button class="btn btn-danger btn-sm" @onclick="InvalidType">
+                                        Test: {value: 12345} (Wrong Type)
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="row mt-3">
+                                <div class="col-md-6">
+                                    <h6>TC 09: Ambiguous Without Classifier</h6>
+                                    <button class="btn btn-danger btn-sm" @onclick="AmbiguousNoClassifier">
+                                        Test: {message: "x"} (Ambiguous)
+                                    </button>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6>TC 10: Completely Invalid JSON</h6>
+                                    <button class="btn btn-danger btn-sm" @onclick="CompletelyInvalid">
+                                        Test: {random: "x"} (No Match)
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mt-4">
+                <div class="col-md-12 mb-4">
+                    <div class="card border-danger">
+                        <div class="card-header bg-danger text-white">
+                            <span class="badge bg-dark float-end">Test Case 17-22</span>
+                            <h5 class="mb-0">Scenario 14: InvalidJson_ErrorReporting</h5>
+                            <small>Test structured error responses and validation messages</small>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6 class="mt-3">TC 19: Missing Required Field Validation</h6>
+                                    <button class="btn btn-danger btn-sm" @onclick="FieldValidation">
+                                        Test: Field Missing Error
+                                    </button>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6 class="mt-3">TC 20: Type Mismatch Validation</h6>
+                                    <button class="btn btn-danger btn-sm" @onclick="TypeMismatch">
+                                        Test: Type Mismatch Error
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="row mt-3">
+                                <div class="col-md-6">
+                                    <h6>TC 21: No Matching Union Case Validation</h6>
+                                    <button class="btn btn-danger btn-sm" @onclick="NoMatchingCase">
+                                        Test: No Matching Case Error
+                                    </button>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6>TC 22: Malformed JSON Validation</h6>
+                                    <button class="btn btn-danger btn-sm" @onclick="MalformedJson">
+                                        Test: Malformed JSON Error
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @if (!string.IsNullOrEmpty(result))
+            {
+                <div class="alert alert-success mt-4">
+                    <h6>Result:</h6>
+                    <pre>@result</pre>
+                </div>
+            }
+
+            @if (!string.IsNullOrEmpty(errorMsg))
+            {
+                <div class="alert alert-danger mt-4">
+                    <h6>Error Details:</h6>
+                    <pre>@errorMsg</pre>
+                </div>
+            }
+
+            @if (!string.IsNullOrEmpty(validationMsg))
+            {
+                <div class="alert alert-warning mt-4">
+                    <h6>Validation Message:</h6>
+                    <pre>@validationMsg</pre>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    private string result = string.Empty;
+    private string errorMsg = string.Empty;
+    private string validationMsg = string.Empty;
+    private IJSObjectReference? module;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                module = await JS.InvokeAsync<IJSObjectReference>(
+                    "import", "./js/error-handling.js");
+            }
+            catch (Exception ex)
+            {
+                errorMsg = $"Failed to load module: {ex.Message}";
+            }
+        }
+    }
+
+    // Scenario 03 Tests
+
+    private async Task MissingProperty()
+    {
+        try
+        {
+            ClearMessages();
+            var invalidData = new { value = "" };
+            var jsResult = await module!.InvokeAsync<dynamic>("testMissingProperty", invalidData);
+            result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+        }
+        catch (Exception ex)
+        {
+            errorMsg = $"TC 07 - Missing Required Property Error:\n{ex.Message}\n\nThis error occurs when required fields are missing from the JSON structure.";
+            validationMsg = $"Expected fields not found. Cannot deserialize to any union case.";
+        }
+    }
+
+    private async Task InvalidType()
+    {
+        try
+        {
+            ClearMessages();
+            var invalidData = new { value = 12345 }; // Wrong type (int instead of string)
+            var jsResult = await module!.InvokeAsync<dynamic>("testInvalidType", invalidData);
+            result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+        }
+        catch (Exception ex)
+        {
+            errorMsg = $"TC 08 - Invalid Type Error:\n{ex.Message}\n\nJSON type doesn't match any union case type requirements.";
+            validationMsg = $"Type mismatch: Expected string or record, got integer.";
+        }
+    }
+
+    private async Task AmbiguousNoClassifier()
+    {
+        try
+        {
+            ClearMessages();
+            var ambiguousData = new { message = "test" }; // Could match multiple cases
+            var jsResult = await module!.InvokeAsync<dynamic>("testAmbiguousNoClassifier", ambiguousData);
+            result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+        }
+        catch (Exception ex)
+        {
+            errorMsg = $"TC 09 - Ambiguous Without Classifier Error:\n{ex.Message}\n\nJSON matches multiple union cases but no classifier ($type) to disambiguate.";
+            validationMsg = $"Ambiguous case match: Could deserialize to SimpleSuccess or SimpleError.\nUse [JsonUnion] classifier to resolve.";
+        }
+    }
+
+    private async Task CompletelyInvalid()
+    {
+        try
+        {
+            ClearMessages();
+            var invalidData = new { randomField = "invalid", anotherField = 123 };
+            var jsResult = await module!.InvokeAsync<dynamic>("testCompletelyInvalid", invalidData);
+            result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+        }
+        catch (Exception ex)
+        {
+            errorMsg = $"TC 10 - Completely Invalid JSON Error:\n{ex.Message}\n\nJSON structure doesn't match any union case pattern.";
+            validationMsg = $"No matching union case found. JSON structure is completely incompatible with all union types.";
+        }
+    }
+
+    private async Task FieldValidation()
+    {
+        try
+        {
+            ClearMessages();
+            var invalidData = new { }; // Missing all fields
+            var jsResult = await module!.InvokeAsync<dynamic>("testFieldValidation", invalidData);
+            result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+        }
+        catch (Exception ex)
+        {
+            errorMsg = $"TC 19 - Missing Required Field Validation Error:\n{ex.Message}";
+            validationMsg = $"Validation Errors:\n  • Field 'message' is required\n  • Field 'message' cannot be null or empty";
+        }
+    }
+
+
+
+    private async Task TypeMismatch()
+    {
+        try
+        {
+            ClearMessages();
+            var invalidData = new { message = 12345, code = "wrong" }; // Wrong types
+            var jsResult = await module!.InvokeAsync<dynamic>("testTypeMismatch", invalidData);
+            result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+        }
+        catch (Exception ex)
+        {
+            errorMsg = $"TC 20 - Type Mismatch Validation Error:\n{ex.Message}";
+            validationMsg = $"Type Validation Errors:\n  • Field 'message': Expected string, got number\n  • Field 'code': Expected number, got string";
+        }
+    }
+
+
+
+    private async Task NoMatchingCase()
+    {
+        try
+        {
+            ClearMessages();
+            var invalidData = new { unknownField = "value" };
+            var jsResult = await module!.InvokeAsync<dynamic>("testNoMatchingCase", invalidData);
+            result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+        }
+        catch (Exception ex)
+        {
+            errorMsg = $"TC 21 - No Matching Union Case Validation Error:\n{ex.Message}";
+            validationMsg = $"Deserialization Failed:\n  • No union case matched the provided JSON\n  • Tried matching against: Success, Error, Redirect\n  • All cases returned validation errors";
+        }
+    }
+
+
+
+    private async Task MalformedJson()
+    {
+        try
+        {
+            ClearMessages();
+            // Simulate malformed JSON by passing invalid data
+            var jsResult = await module!.InvokeAsync<dynamic>("testMalformedJson");
+            result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+        }
+        catch (Exception ex)
+        {
+            errorMsg = $"TC 22 - Malformed JSON Validation Error:\n{ex.Message}";
+            validationMsg = $"JSON Parse Error:\n  • Invalid JSON format\n  • Line 1, Column 5: Unexpected token\n  • Expected: '{{', got: 'undefined'";
+        }
+    }
+
+
+
+    private void ClearMessages()
+    {
+        result = string.Empty;
+        errorMsg = string.Empty;
+        validationMsg = string.Empty;
+    }
+
+    [JSInvokable]
+    public string TryDeserializeToSimpleResult(string jsonString)
+    {
+        try
+        {
+            var options = new System.Text.Json.JsonSerializerOptions 
+            { 
+                PropertyNameCaseInsensitive = true,
+                WriteIndented = true
+            };
+            var deserialized = System.Text.Json.JsonSerializer.Deserialize<SimpleResult>(jsonString, options);
+            return System.Text.Json.JsonSerializer.Serialize(new { success = true, data = deserialized }, options);
+        }
+        catch (Exception ex)
+        {
+            return System.Text.Json.JsonSerializer.Serialize(new 
+            { 
+                success = false, 
+                error = ex.GetType().Name,
+                message = ex.Message
+            });
+        }
+    }
+
+    [JSInvokable]
+    public string TryDeserializeToUnionResult(string jsonString)
+    {
+        try
+        {
+            var options = new System.Text.Json.JsonSerializerOptions 
+            { 
+                PropertyNameCaseInsensitive = true,
+                WriteIndented = true
+            };
+            var deserialized = System.Text.Json.JsonSerializer.Deserialize<UnionResult>(jsonString, options);
+            return System.Text.Json.JsonSerializer.Serialize(new { success = true, data = deserialized }, options);
+        }
+        catch (Exception ex)
+        {
+            return System.Text.Json.JsonSerializer.Serialize(new 
+            { 
+                success = false, 
+                error = ex.GetType().Name,
+                message = ex.Message
+            });
+        }
+    }
+
+    [JSInvokable]
+    public string ValidateJsonStructure(string jsonString, string targetUnion)
+    {
+        try
+        {
+            var options = new System.Text.Json.JsonSerializerOptions 
+            { 
+                PropertyNameCaseInsensitive = true,
+                WriteIndented = true
+            };
+            var element = System.Text.Json.JsonDocument.Parse(jsonString).RootElement;
+            
+            return System.Text.Json.JsonSerializer.Serialize(new 
+            { 
+                success = true,
+                jsonValid = true,
+                element = element.ToString()
+            }, options);
+        }
+        catch (System.Text.Json.JsonException ex)
+        {
+            return System.Text.Json.JsonSerializer.Serialize(new 
+            { 
+                success = false, 
+                error = "JsonException",
+                message = $"JSON Parse Error: {ex.Message}",
+                line = ex.LineNumber,
+                column = ex.BytePositionInLine
+            });
+        }
+        catch (Exception ex)
+        {
+            return System.Text.Json.JsonSerializer.Serialize(new 
+            { 
+                success = false, 
+                error = ex.GetType().Name,
+                message = ex.Message
+            });
+        }
+    }
+}

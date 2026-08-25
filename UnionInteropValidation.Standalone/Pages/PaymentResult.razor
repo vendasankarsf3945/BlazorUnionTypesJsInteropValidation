@@ -1,0 +1,162 @@
+@page "/payment-result"
+@inject IJSRuntime JS
+
+@using UnionInteropSample.Models
+
+<PageTitle>Complex Union - Payment Processing Workflow</PageTitle>
+
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-10 mx-auto">
+            <h1>Complex Union: Payment Processing Workflow (PaymentResult)</h1>
+
+            <div class="row">
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0">C# → JavaScript</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-success btn-sm" @onclick="SendApproved">
+                                    Payment Approved
+                                </button>
+                                <button class="btn btn-danger btn-sm" @onclick="SendDeclined">
+                                    Payment Declined
+                                </button>
+                                <button class="btn btn-warning btn-sm" @onclick="SendPending">
+                                    Payment Pending
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="mb-0">JavaScript → C#</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-info btn-sm" @onclick="CallCSharpWithPayment">
+                                    Call C# with PaymentResult from JS
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @if (!string.IsNullOrEmpty(result))
+            {
+                <div class="alert alert-success mt-4">
+                    <h6>Result:</h6>
+                    <pre>@result</pre>
+                </div>
+            }
+
+            @if (!string.IsNullOrEmpty(errorMsg))
+            {
+                <div class="alert alert-danger mt-4">
+                    <h6>Error:</h6>
+                    <p>@errorMsg</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    private string result = string.Empty;
+    private string errorMsg = string.Empty;
+    private IJSObjectReference? module;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                module = await JS.InvokeAsync<IJSObjectReference>(
+                    "import", "./js/payment-result.js");
+            }
+            catch (Exception ex)
+            {
+                errorMsg = $"Failed to load module: {ex.Message}";
+            }
+        }
+    }
+
+    private async Task SendApproved()
+    {
+        try
+        {
+            ClearMessages();
+            var payment = new PaymentApproved("TXN_12345", 99.99m, DateTime.UtcNow);
+            dynamic jsResult = await module!.InvokeAsync<dynamic>("processPayment", payment);
+            result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+        }
+        catch (Exception ex)
+        {
+            errorMsg = ex.Message;
+        }
+    }
+
+    private async Task SendDeclined()
+    {
+        try
+        {
+            ClearMessages();
+            var payment = new PaymentDeclined("Card declined", 2001);
+            dynamic jsResult = await module!.InvokeAsync<dynamic>("processPayment", payment);
+            result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+        }
+        catch (Exception ex)
+        {
+            errorMsg = ex.Message;
+        }
+    }
+
+    private async Task SendPending()
+    {
+        try
+        {
+            ClearMessages();
+            var payment = new PaymentPending("REF_54321", DateTime.UtcNow.AddMinutes(5));
+            dynamic jsResult = await module!.InvokeAsync<dynamic>("processPayment", payment);
+            result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+        }
+        catch (Exception ex)
+        {
+            errorMsg = ex.Message;
+        }
+    }
+
+    private async Task CallCSharpWithPayment()
+    {
+        try
+        {
+            ClearMessages();
+            dynamic jsResult = await module!.InvokeAsync<dynamic>("callCSharpWithPayment");
+            result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+        }
+        catch (Exception ex)
+        {
+            errorMsg = ex.Message;
+        }
+    }
+
+    [JSInvokable]
+    public static object HandlePaymentFromJS(object payment)
+    {
+        Console.WriteLine($"C# received from JS: {System.Text.Json.JsonSerializer.Serialize(payment)}");
+        return new { status = "received from JS", data = payment, receivedType = payment?.GetType().Name };
+    }
+
+    private void ClearMessages()
+    {
+        result = string.Empty;
+        errorMsg = string.Empty;
+    }
+}

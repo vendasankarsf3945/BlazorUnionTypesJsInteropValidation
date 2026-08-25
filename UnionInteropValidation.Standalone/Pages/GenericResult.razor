@@ -1,0 +1,213 @@
+@page "/generic-result"
+@inject IJSRuntime JS
+
+@using UnionInteropSample.Models
+
+<PageTitle>Generic Union Pattern Result&lt;T&gt;</PageTitle>
+
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-10 mx-auto">
+            <h1>Generic Union Pattern: Result&lt;T&gt; (Type Parameter Handling)</h1>
+
+            <div class="row">
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0">C# → JavaScript</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-muted small mb-3">Test with different type parameters</p>
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-success btn-sm" @onclick="SendOkString">
+                                    Result&lt;string&gt; - Ok("Success")
+                                </button>
+                                <button class="btn btn-danger btn-sm" @onclick="SendErrorString">
+                                    Result&lt;string&gt; - Error("Failed")
+                                </button>
+                                <button class="btn btn-success btn-sm" @onclick="SendOkInt">
+                                    Result&lt;int&gt; - Ok(42)
+                                </button>
+                                <button class="btn btn-danger btn-sm" @onclick="SendErrorInt">
+                                    Result&lt;int&gt; - Error("Invalid")
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="mb-0">JavaScript → C#</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-muted small mb-3">JavaScript calls C# method with union</p>
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-info btn-sm" @onclick="CallCSharpWithResultString">
+                                    Call C# with Result&lt;string&gt; from JS
+                                </button>
+                                <button class="btn btn-info btn-sm" @onclick="CallCSharpWithResultInt">
+                                    Call C# with Result&lt;int&gt; from JS
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @if (!string.IsNullOrEmpty(result))
+            {
+                <div class="alert alert-success mt-4">
+                    <h6>Result:</h6>
+                    <pre>@result</pre>
+                </div>
+            }
+
+            @if (!string.IsNullOrEmpty(errorMsg))
+            {
+                <div class="alert alert-danger mt-4">
+                    <h6>Error:</h6>
+                    <p>@errorMsg</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    private string result = string.Empty;
+    private string errorMsg = string.Empty;
+    private IJSObjectReference? module;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                module = await JS.InvokeAsync<IJSObjectReference>(
+                    "import", "./js/generic-result.js");
+            }
+            catch (Exception ex)
+            {
+                errorMsg = $"Failed to load module: {ex.Message}";
+            }
+        }
+    }
+
+    private async Task SendOkString()
+    {
+        try
+        {
+            ClearMessages();
+            var unionData = new Ok<string>("Operation succeeded");
+            dynamic jsResult = await module!.InvokeAsync<dynamic>("processResult", unionData);
+            result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+        }
+        catch (Exception ex)
+        {
+            errorMsg = ex.Message;
+        }
+    }
+
+    private async Task SendErrorString()
+    {
+        try
+        {
+            ClearMessages();
+            var unionData = new Error<string>("Operation failed");
+            dynamic jsResult = await module!.InvokeAsync<dynamic>("processResult", unionData);
+            result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+        }
+        catch (Exception ex)
+        {
+            errorMsg = ex.Message;
+        }
+    }
+
+    private async Task SendOkInt()
+    {
+        try
+        {
+            ClearMessages();
+            var unionData = new Ok<int>(42);
+            dynamic jsResult = await module!.InvokeAsync<dynamic>("processResult", unionData);
+            result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+        }
+        catch (Exception ex)
+        {
+            errorMsg = ex.Message;
+        }
+    }
+
+    private async Task SendErrorInt()
+    {
+        try
+        {
+            ClearMessages();
+            var unionData = new Error<int>("Invalid input");
+            dynamic jsResult = await module!.InvokeAsync<dynamic>("processResult", unionData);
+            result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+        }
+        catch (Exception ex)
+        {
+            errorMsg = ex.Message;
+        }
+    }
+
+    private async Task CallCSharpWithResult()
+    {
+        try
+        {
+            ClearMessages();
+            dynamic jsResult = await module!.InvokeAsync<dynamic>("callCSharpWithResult");
+            result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+        }
+        catch (Exception ex)
+        {
+            errorMsg = ex.Message;
+        }
+    }
+
+    private async Task CallCSharpWithResultString()
+    {
+        try
+        {
+            ClearMessages();
+            dynamic jsResult = await module!.InvokeAsync<dynamic>("callCSharpWithResultString");
+            result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+        }
+        catch (Exception ex)
+        {
+            errorMsg = ex.Message;
+        }
+    }
+
+    private async Task CallCSharpWithResultInt()
+    {
+        try
+        {
+            ClearMessages();
+            dynamic jsResult = await module!.InvokeAsync<dynamic>("callCSharpWithResultInt");
+            result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+        }
+        catch (Exception ex)
+        {
+            errorMsg = ex.Message;
+        }
+    }
+
+    [JSInvokable]
+    public static object HandleResultFromJS(object resultData)
+    {
+        Console.WriteLine($"C# received from JS: {System.Text.Json.JsonSerializer.Serialize(resultData)}");
+        return new { status = "received from JS", data = resultData, receivedType = resultData?.GetType().Name };
+    }
+
+    private void ClearMessages()
+    {
+        result = string.Empty;
+        errorMsg = string.Empty;
+    }
+}

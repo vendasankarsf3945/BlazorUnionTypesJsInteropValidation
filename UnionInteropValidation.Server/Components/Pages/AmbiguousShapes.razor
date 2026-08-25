@@ -1,0 +1,182 @@
+@page "/ambiguous-shapes"
+@inject IJSRuntime JS
+
+@using UnionInteropValidationServer.Models
+
+<PageTitle>Test Case 09-27 - Ambiguous Shapes & Classifier Methods</PageTitle>
+
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-10 mx-auto">
+            <h1>Test Case 09–27: Ambiguous Shapes & Type Discriminator (With/Without $type Classifier)</h1>
+
+            <div class="row">
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-header bg-warning text-dark">
+                            <h5 class="mb-0">Test Case 09–12: WITHOUT $type Classifier (Ambiguous)</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-muted small">Same JSON structure - deserialization may fail or choose wrong case</p>
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-warning btn-sm" @onclick="SendSimpleSuccess">
+                                    TC 09: Property-based ambiguity - SimpleSuccess
+                                </button>
+                                <button class="btn btn-warning btn-sm" @onclick="SendSimpleError">
+                                    TC 11: Multiple matching cases - SimpleError
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0">Test Case 15–17: WITH $type Classifier (Resolved)</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-muted small">$type field disambiguates the cases</p>
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-success btn-sm" @onclick="SendTaggedSuccess">
+                                    TC 15/23: Classifier resolves first record case
+                                </button>
+                                <button class="btn btn-success btn-sm" @onclick="SendTaggedError">
+                                    TC 16/24: Classifier resolves second record case
+                                </button>
+                                <button class="btn btn-info btn-sm" @onclick="CallCSharpWithAmbiguous">
+                                    TC 25: Classifier takes precedence over ambiguity
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @if (!string.IsNullOrEmpty(result))
+            {
+                <div class="alert alert-success mt-4">
+                    <h6>Result:</h6>
+                    <pre>@result</pre>
+                </div>
+            }
+
+            @if (!string.IsNullOrEmpty(errorMsg))
+            {
+                <div class="alert alert-danger mt-4">
+                    <h6>Error/Ambiguity:</h6>
+                    <p>@errorMsg</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    private string result = string.Empty;
+    private string errorMsg = string.Empty;
+    private IJSObjectReference? module;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                module = await JS.InvokeAsync<IJSObjectReference>(
+                    "import", "./js/ambiguous-shapes.js");
+            }
+            catch (Exception ex)
+            {
+                errorMsg = $"Failed to load module: {ex.Message}";
+            }
+        }
+    }
+
+    private async Task SendSimpleSuccess()
+    {
+        try
+        {
+            ClearMessages();
+            var unionData = new SimpleSuccess("Operation succeeded");
+            dynamic jsResult = await module!.InvokeAsync<dynamic>("processAmbiguous", unionData);
+            result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+        }
+        catch (Exception ex)
+        {
+            errorMsg = $"Ambiguous deserialization issue: {ex.Message}";
+        }
+    }
+
+    private async Task SendSimpleError()
+    {
+        try
+        {
+            ClearMessages();
+            var unionData = new SimpleError("Operation failed");
+            dynamic jsResult = await module!.InvokeAsync<dynamic>("processAmbiguous", unionData);
+            result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+        }
+        catch (Exception ex)
+        {
+            errorMsg = $"Ambiguous deserialization issue: {ex.Message}";
+        }
+    }
+
+    private async Task SendTaggedSuccess()
+    {
+        try
+        {
+            ClearMessages();
+            var unionData = new TaggedSuccess("Operation succeeded");
+            dynamic jsResult = await module!.InvokeAsync<dynamic>("processTagged", unionData);
+            result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+        }
+        catch (Exception ex)
+        {
+            errorMsg = ex.Message;
+        }
+    }
+
+    private async Task SendTaggedError()
+    {
+        try
+        {
+            ClearMessages();
+            var unionData = new TaggedError("Operation failed");
+            dynamic jsResult = await module!.InvokeAsync<dynamic>("processTagged", unionData);
+            result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+        }
+        catch (Exception ex)
+        {
+            errorMsg = ex.Message;
+        }
+    }
+
+    private async Task CallCSharpWithAmbiguous()
+    {
+        try
+        {
+            ClearMessages();
+            dynamic jsResult = await module!.InvokeAsync<dynamic>("callCSharpWithAmbiguous");
+            result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+        }
+        catch (Exception ex)
+        {
+            errorMsg = ex.Message;
+        }
+    }
+
+    [JSInvokable]
+    public static object HandleAmbiguousFromJS(object unionData)
+    {
+        Console.WriteLine($"C# received from JS: {System.Text.Json.JsonSerializer.Serialize(unionData)}");
+        return new { status = "received from JS", data = unionData, receivedType = unionData?.GetType().Name };
+    }
+
+    private void ClearMessages()
+    {
+        result = string.Empty;
+        errorMsg = string.Empty;
+    }
+}
