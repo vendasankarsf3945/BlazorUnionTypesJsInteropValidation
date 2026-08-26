@@ -202,17 +202,41 @@
     }
 
     [JSInvokable]
-    public static object HandleValueTypeFromJS(object valueTypeData)
+    public static object HandleValueTypeFromJS(System.Text.Json.JsonElement json)
     {
-        Console.WriteLine($"C# received from JS: {System.Text.Json.JsonSerializer.Serialize(valueTypeData)}");
-        return new { status = "received from JS", data = valueTypeData, receivedType = valueTypeData?.GetType().Name };
+        var opts = new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+        IntResult valueType;
+        if (json.TryGetProperty("value", out _))
+            valueType = System.Text.Json.JsonSerializer.Deserialize<IntSuccess>(json, opts)!;
+        else
+            valueType = System.Text.Json.JsonSerializer.Deserialize<IntError>(json, opts)!;
+        var activeCase = valueType.Value?.GetType().Name ?? "null";
+        var description = valueType.Value switch
+        {
+            IntSuccess s => $"IntSuccess: value={s.Value}",
+            IntError e => $"IntError: message=\"{e.Message}\"",
+            _ => "null active case"
+        };
+        return new { status = "received from JS", activeCase, description };
     }
 
     [JSInvokable]
-    public static object HandleReferenceTypeFromJS(object referenceTypeData)
+    public static object HandleReferenceTypeFromJS(System.Text.Json.JsonElement json)
     {
-        Console.WriteLine($"C# received from JS: {System.Text.Json.JsonSerializer.Serialize(referenceTypeData)}");
-        return new { status = "received from JS", data = referenceTypeData, receivedType = referenceTypeData?.GetType().Name };
+        var opts = new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+        StringResult referenceType;
+        if (json.TryGetProperty("content", out _))
+            referenceType = System.Text.Json.JsonSerializer.Deserialize<StringSuccess>(json, opts)!;
+        else
+            referenceType = new StringEmpty();
+        var activeCase = referenceType.Value?.GetType().Name ?? "null";
+        var description = referenceType.Value switch
+        {
+            StringSuccess s => $"StringSuccess: content=\"{s.Content}\", metadata=\"{s.Metadata}\"",
+            StringEmpty => "StringEmpty",
+            _ => "null active case"
+        };
+        return new { status = "received from JS", activeCase, description };
     }
 
     private void ClearMessages()

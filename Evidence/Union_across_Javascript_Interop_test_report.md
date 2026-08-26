@@ -10,7 +10,7 @@
 
 **Sample:** BlazorUnionTypesJsInteropValidation
 
-**Result:** 27 validations passed, 2 issues found (see Issues section)
+**Result:** 35 validations passed, 2 issues found (see Issues section)
 
 ---
 
@@ -18,12 +18,13 @@
 
 **Configurations tested:** 
 - Debug (development mode)
+- Published Output
 - Release (AOT compilation with `/p:RunAOTCompilation=true`)
 
 **Deployment models tested:**
-- ✓ UnionInteropValidation.Server (Blazor Server + AOT)
-- ✓ UnionInteropValidation.Standalone (Standalone WebAssembly)
-- ✓ UnionInteropValidation.Hosted (Hosted WebAssembly)
+- UnionInteropValidation.Server (Blazor Server + AOT)
+- UnionInteropValidation.Standalone (Standalone WebAssembly)
+- UnionInteropValidation.Hosted (Hosted WebAssembly)
 
 **Also exercised:**
 - JavaScript Interop (C# ↔ JS bidirectional communication)
@@ -70,17 +71,25 @@ Based on issue #68481 requirements - test each union type in both directions thr
 | **20** | Success record transmitted without wrapper object | Pass | [Success response](Evidence/RecordCase_NoWrapperObject/ApiResponse_Success_case.png) |
 | **21** | Failure record transmitted without wrapper object | Pass | [Failure response](Evidence/RecordCase_NoWrapperObject/ApiResponse_Failure_case.png) |
 | **22** | Redirect record transmitted without wrapper object | Pass | [Redirect response](Evidence/RecordCase_NoWrapperObject/ApiResponse_Redirect_case.png) |
-| **23** | Integer union round-trip (JS → .NET) | Pass | [Integer round-trip](Evidence/JavaScriptToDotNet_RoundTrip/Int-round-trip.png) |
-| **24** | String union round-trip (JS → .NET) | Pass | [String round-trip](Evidence/JavaScriptToDotNet_RoundTrip/String-round-trip.png) |
-| **25** | Record union round-trip (JS → .NET) | Pass | [Multi-case round-trip](Evidence/JavaScriptToDotNet_RoundTrip/Multi-case%20round-trip.png) |
-| **26** | Null union round-trip (JS → .NET) | Pass | [Null round-trip](Evidence/NullActiveCase_RoundTrip/Null-case-round-trip.png) |
+| **23** | Integer union round-trip (JS → .NET) — `UnambiguousInt` active case deserialized | Pass | [Integer round-trip](Evidence/JavaScriptToDotNet_RoundTrip/Int-round-trip.png) |
+| **24** | String union round-trip (JS → .NET) — `UnambiguousString` active case deserialized | Pass | [String round-trip](Evidence/JavaScriptToDotNet_RoundTrip/String-round-trip.png) |
+| **25** | Record union round-trip (JS → .NET) — multi-case `ApiResponse` active case deserialized | Pass | [Multi-case round-trip](Evidence/JavaScriptToDotNet_RoundTrip/Multi-case%20round-trip.png) |
+| **26** | Null union round-trip (JS → .NET) — null active case preserved | Pass | [Null round-trip](Evidence/NullActiveCase_RoundTrip/Null-case-round-trip.png) |
 | **27** | Null active case preserved through interop | Pass | [Null active case](Evidence/NullableUnion_NullActiveCase/Null_active_case.png) |
+| **28** | JS invokes .NET — `TaggedResult` received; `TaggedSuccess` active case deserialized from ambiguous JSON | Pass | [Ambiguous union](Evidence/JSInvokesDotNet_UnionParameter/JS-invokes-C%23-with-ambiguous-union.png) |
+| **29** | JS invokes .NET — `PropertyBased` union received; `PBSuccess` active case deserialized | Pass | [Property-based union](Evidence/JSInvokesDotNet_UnionParameter/JS-invokes-C%23-with-classified-union.png) |
+| **30** | JS invokes .NET — `TypeBased` union received; `TBSuccess` active case deserialized | Pass | [Type-based union](Evidence/JSInvokesDotNet_UnionParameter/JS-invokes-C%23-with-type-based-union.png) |
+| **31** | JS invokes .NET — `PaymentResult` received; `PaymentApproved` active case deserialized from complex JSON | Pass | [Complex multi-case union](Evidence/JSInvokesDotNet_UnionParameter/JS-invokes-C%23-with-complex-union.png) |
+| **32** | JS invokes .NET — `Result<T>` received; `Ok` active case deserialized with string value | Pass | [Generic result Ok string](Evidence/JSInvokesDotNet_UnionParameter/JS-invokes-C%23-with-generic-result-ok-string.png) |
+| **33** | JS invokes .NET — `Result<T>` received; `Ok` active case deserialized with int value | Pass | [Generic result Ok int](Evidence/JSInvokesDotNet_UnionParameter/JS-invokes-C%23-with-generic-result-ok-int.png) |
+| **34** | JS invokes .NET — `IntResult` received; `IntSuccess` active case deserialized (value type union) | Pass | [IntResult value type](Evidence/JSInvokesDotNet_UnionParameter/JS-invokes-C%23-with-IntResult-value-type.png) |
+| **35** | JS invokes .NET — `StringResult` received; `StringSuccess` active case deserialized (reference type union) | Pass | [StringResult reference type](Evidence/JSInvokesDotNet_UnionParameter/JS-invokes-C%23-with-StringResult-reference-type.png) |
 
 ---
 
 ## Issues
 
-Based on testing across all three deployment platforms, the following issues were identified:
+Based on testing across all three deployment platforms, the following issues were identified.
 
 ### Issue 1: $type Classifier Field Undefined in Type-Based Discrimination
 

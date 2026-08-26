@@ -148,10 +148,25 @@
     }
 
     [JSInvokable]
-    public static object HandlePaymentFromJS(object payment)
+    public static object HandlePaymentFromJS(System.Text.Json.JsonElement json)
     {
-        Console.WriteLine($"C# received from JS: {System.Text.Json.JsonSerializer.Serialize(payment)}");
-        return new { status = "received from JS", data = payment, receivedType = payment?.GetType().Name };
+        var opts = new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+        UnionInteropValidation.Standalone.Models.PaymentResult payment;
+        if (json.TryGetProperty("transactionId", out _))
+            payment = System.Text.Json.JsonSerializer.Deserialize<PaymentApproved>(json, opts)!;
+        else if (json.TryGetProperty("reason", out _))
+            payment = System.Text.Json.JsonSerializer.Deserialize<PaymentDeclined>(json, opts)!;
+        else
+            payment = System.Text.Json.JsonSerializer.Deserialize<PaymentPending>(json, opts)!;
+        var activeCase = payment.Value?.GetType().Name ?? "null";
+        var description = payment.Value switch
+        {
+            PaymentApproved a => $"PaymentApproved: transactionId=\"{a.TransactionId}\", amount={a.Amount}",
+            PaymentDeclined d => $"PaymentDeclined: reason=\"{d.Reason}\", errorCode={d.ErrorCode}",
+            PaymentPending p => $"PaymentPending: referenceId=\"{p.ReferenceId}\"",
+            _ => "null active case"
+        };
+        return new { status = "received from JS", activeCase, description };
     }
 
     private void ClearMessages()

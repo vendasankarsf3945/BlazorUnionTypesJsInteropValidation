@@ -149,10 +149,25 @@
     }
 
     [JSInvokable]
-    public static object HandleApiResponseFromJS(object apiResponse)
+    public static object HandleApiResponseFromJS(System.Text.Json.JsonElement json)
     {
-        Console.WriteLine($"C# received from JS: {System.Text.Json.JsonSerializer.Serialize(apiResponse)}");
-        return new { status = "received from JS", data = apiResponse, receivedType = apiResponse?.GetType().Name };
+        var opts = new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+        ApiResponse apiResponse;
+        if (json.TryGetProperty("url", out _))
+            apiResponse = System.Text.Json.JsonSerializer.Deserialize<RedirectResponse>(json, opts)!;
+        else if (json.TryGetProperty("errorMessage", out _))
+            apiResponse = System.Text.Json.JsonSerializer.Deserialize<FailureResponse>(json, opts)!;
+        else
+            apiResponse = System.Text.Json.JsonSerializer.Deserialize<SuccessResponse>(json, opts)!;
+        var activeCase = apiResponse.Value?.GetType().Name ?? "null";
+        var description = apiResponse.Value switch
+        {
+            SuccessResponse s => $"SuccessResponse: statusCode={s.StatusCode}, data=\"{s.Data}\"",
+            FailureResponse f => $"FailureResponse: statusCode={f.StatusCode}, errorCode=\"{f.ErrorCode}\"",
+            RedirectResponse r => $"RedirectResponse: url=\"{r.Url}\", redirectCode={r.RedirectCode}",
+            _ => "null active case"
+        };
+        return new { status = "received from JS", activeCase, description };
     }
 
     private void ClearMessages()

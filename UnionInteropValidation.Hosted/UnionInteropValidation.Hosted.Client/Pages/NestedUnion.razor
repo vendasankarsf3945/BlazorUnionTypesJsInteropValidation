@@ -136,10 +136,26 @@
     }
 
     [JSInvokable]
-    public static object HandleNestedFromJS(object containerData)
+    public static object HandleNestedFromJS(System.Text.Json.JsonElement json)
     {
-        Console.WriteLine($"C# received from JS: {System.Text.Json.JsonSerializer.Serialize(containerData)}");
-        return new { status = "received from JS", data = containerData, receivedType = containerData?.GetType().Name };
+        var opts = new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+        var id = json.TryGetProperty("id", out var idElem) ? idElem.GetString() ?? "" : "";
+        UnionInteropValidation.Hosted.Client.Models.NestedUnion payload = default;
+        if (json.TryGetProperty("payload", out var payloadElem))
+        {
+            if (payloadElem.TryGetProperty("name", out _))
+                payload = System.Text.Json.JsonSerializer.Deserialize<UserData>(payloadElem, opts)!;
+            else
+                payload = System.Text.Json.JsonSerializer.Deserialize<ErrorData>(payloadElem, opts)!;
+        }
+        var nestedCase = payload.Value?.GetType().Name ?? "null";
+        var description = payload.Value switch
+        {
+            UserData u => $"UserData: name=\"{u.Name}\", email=\"{u.Email}\"",
+            ErrorData e => $"ErrorData: code=\"{e.Code}\", message=\"{e.Message}\"",
+            _ => "null payload"
+        };
+        return new { status = "received from JS", containerId = id, nestedCase, description };
     }
 
     private void ClearMessages()

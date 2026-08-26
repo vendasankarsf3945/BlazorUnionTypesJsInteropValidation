@@ -202,17 +202,35 @@
     }
 
     [JSInvokable]
-    public static object HandlePropertyBasedFromJS(object propertyBased)
+    public static object HandlePropertyBasedFromJS(System.Text.Json.JsonElement json)
     {
-        Console.WriteLine($"C# received from JS: {System.Text.Json.JsonSerializer.Serialize(propertyBased)}");
-        return new { status = "received from JS", data = propertyBased, receivedType = propertyBased?.GetType().Name };
+        var opts = new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+        // PBSuccess and PBError share the same JSON shape; first case wins
+        PropertyBased union = System.Text.Json.JsonSerializer.Deserialize<PBSuccess>(json, opts)!;
+        var activeCase = union.Value?.GetType().Name ?? "null";
+        var description = union.Value switch
+        {
+            PBSuccess s => $"PBSuccess: \"{s.Result}\"",
+            PBError e => $"PBError: \"{e.Result}\"",
+            _ => "null active case"
+        };
+        return new { status = "received from JS", activeCase, description, note = "Ambiguous shapes: same JSON structure for both cases" };
     }
 
     [JSInvokable]
-    public static object HandleTypeBasedFromJS(object typeBased)
+    public static object HandleTypeBasedFromJS(System.Text.Json.JsonElement json)
     {
-        Console.WriteLine($"C# received from JS: {System.Text.Json.JsonSerializer.Serialize(typeBased)}");
-        return new { status = "received from JS", data = typeBased, receivedType = typeBased?.GetType().Name };
+        var opts = new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+        // TBSuccess and TBError share the same JSON shape; first case wins
+        TypeBased union = System.Text.Json.JsonSerializer.Deserialize<TBSuccess>(json, opts)!;
+        var activeCase = union.Value?.GetType().Name ?? "null";
+        var description = union.Value switch
+        {
+            TBSuccess s => $"TBSuccess: \"{s.Result}\"",
+            TBError e => $"TBError: \"{e.Result}\"",
+            _ => "null active case"
+        };
+        return new { status = "received from JS", activeCase, description };
     }
 
     private void ClearMessages()

@@ -199,10 +199,22 @@
     }
 
     [JSInvokable]
-    public static object HandleResultFromJS(object resultData)
+    public static object HandleResultFromJS(System.Text.Json.JsonElement json)
     {
-        Console.WriteLine($"C# received from JS: {System.Text.Json.JsonSerializer.Serialize(resultData)}");
-        return new { status = "received from JS", data = resultData, receivedType = resultData?.GetType().Name };
+        var opts = new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+        Result<object> result;
+        if (json.TryGetProperty("value", out _))
+            result = System.Text.Json.JsonSerializer.Deserialize<Ok<object>>(json, opts)!;
+        else
+            result = System.Text.Json.JsonSerializer.Deserialize<Error<object>>(json, opts)!;
+        var activeCase = result.Value?.GetType().Name ?? "null";
+        var description = result.Value switch
+        {
+            Ok<object> ok => $"Ok: value={System.Text.Json.JsonSerializer.Serialize(ok.Value)}",
+            Error<object> err => $"Error: message=\"{err.Message}\"",
+            _ => "null active case"
+        };
+        return new { status = "received from JS", activeCase, description };
     }
 
     private void ClearMessages()

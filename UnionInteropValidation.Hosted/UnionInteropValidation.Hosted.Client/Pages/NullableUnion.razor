@@ -165,10 +165,22 @@
     }
 
     [JSInvokable]
-    public static object HandleNullableFromJS(object unionData)
+    public static object HandleNullableFromJS(System.Text.Json.JsonElement json)
     {
-        Console.WriteLine($"C# received from JS: {System.Text.Json.JsonSerializer.Serialize(unionData)}");
-        return new { status = "received from JS", data = unionData, receivedType = unionData?.GetType().Name };
+        var opts = new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+        UnionInteropValidation.Hosted.Client.Models.NullableUnion union;
+        if (json.TryGetProperty("message", out _))
+            union = System.Text.Json.JsonSerializer.Deserialize<WithValue>(json, opts)!;
+        else
+            union = new EmptyCase();
+        var activeCase = union.Value?.GetType().Name ?? "null";
+        var description = union.Value switch
+        {
+            WithValue w => $"WithValue: message=\"{w.Message}\", value={w.Value?.ToString() ?? "null"}",
+            EmptyCase => "EmptyCase",
+            _ => "null active case"
+        };
+        return new { status = "received from JS", activeCase, description };
     }
 
     private void ClearMessages()

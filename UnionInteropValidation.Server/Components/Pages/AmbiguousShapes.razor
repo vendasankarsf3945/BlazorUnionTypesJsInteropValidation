@@ -168,10 +168,19 @@
     }
 
     [JSInvokable]
-    public static object HandleAmbiguousFromJS(object unionData)
+    public static object HandleAmbiguousFromJS(System.Text.Json.JsonElement json)
     {
-        Console.WriteLine($"C# received from JS: {System.Text.Json.JsonSerializer.Serialize(unionData)}");
-        return new { status = "received from JS", data = unionData, receivedType = unionData?.GetType().Name };
+        var opts = new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+        // TaggedSuccess and TaggedError share the same JSON shape; first case wins
+        TaggedResult union = System.Text.Json.JsonSerializer.Deserialize<TaggedSuccess>(json, opts)!;
+        var activeCase = union.Value?.GetType().Name ?? "null";
+        var description = union.Value switch
+        {
+            TaggedSuccess s => $"TaggedSuccess: \"{s.Value}\"",
+            TaggedError e => $"TaggedError: \"{e.Value}\"",
+            _ => "null active case"
+        };
+        return new { status = "received from JS", activeCase, description };
     }
 
     private void ClearMessages()

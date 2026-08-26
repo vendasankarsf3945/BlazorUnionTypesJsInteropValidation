@@ -143,10 +143,23 @@
     }
 
     [JSInvokable]
-    public static object HandleUnambiguousFromJS(object unionData)
+    public static object HandleUnambiguousFromJS(System.Text.Json.JsonElement json)
     {
-        Console.WriteLine($"C# received from JS: {System.Text.Json.JsonSerializer.Serialize(unionData)}");
-        return new { status = "received from JS", data = unionData, receivedType = unionData?.GetType().Name };
+        var opts = new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+        UnionInteropValidation.Server.Models.UnambiguousUnion union;
+        // Distinguish by JSON value kind of the 'value' field (number vs string)
+        if (json.TryGetProperty("value", out var v) && v.ValueKind == System.Text.Json.JsonValueKind.Number)
+            union = System.Text.Json.JsonSerializer.Deserialize<UnambiguousInt>(json, opts)!;
+        else
+            union = System.Text.Json.JsonSerializer.Deserialize<UnambiguousString>(json, opts)!;
+        var activeCase = union.Value?.GetType().Name ?? "null";
+        var description = union.Value switch
+        {
+            UnambiguousInt i => $"UnambiguousInt: value={i.Value}",
+            UnambiguousString s => $"UnambiguousString: value=\"{s.Value}\"",
+            _ => "unknown"
+        };
+        return new { status = "received from JS", activeCase, description };
     }
 
     private void ClearMessages()
