@@ -1,45 +1,42 @@
 ﻿/**
- * Nested Union - Test union inside container
- * Demonstrates that unions nested in container objects serialize correctly
+ * Nested Union — NestedUnion(UserData, ErrorData) inside a Container
+ * The active case's record properties appear directly on container.payload — no wrapper object.
  */
 
+export function processPrimitive(container) {
+    // NullableUnion(int?,string) nested inside NullableContainer — value is null, number, or string
+    console.log("JS received NullableContainer:", JSON.stringify(container));
+    return {
+        containerId: container.id,
+        value: container.value,
+        jsonType: container.value === null ? "null" : typeof container.value,
+        receivedJson: JSON.stringify(container)
+    };
+}
+
 export function processNested(containerData) {
-    console.log("JS received container with nested union:", containerData);
-    
+    console.log("JS received Container:", JSON.stringify(containerData));
     const payload = containerData.payload;
-    
-    if (payload.name !== undefined) {
-        return {
-            type: "UserData",
-            containerId: containerData.id,
-            name: payload.name,
-            email: payload.email,
-            display: `UserData: ${payload.name} <${payload.email}>`
-        };
-    } else if (payload.code !== undefined) {
-        return {
-            type: "ErrorData",
-            containerId: containerData.id,
-            code: payload.code,
-            message: payload.message,
-            display: `ErrorData: [${payload.code}] ${payload.message}`
-        };
+    if (payload === null || payload === undefined) {
+        return { containerId: containerData.id, payload: null, note: "null NestedUnion (no active case)" };
     }
-    
-    return { error: "Unknown payload type" };
+    return {
+        containerId: containerData.id,
+        receivedPayload: payload,
+        receivedJson: JSON.stringify(payload)
+    };
 }
 
 export async function callCSharpWithNestedUnion() {
-    console.log("JS calling C# method with nested union");
+    const container = { id: "from-js-123", payload: { name: "John", email: "john@example.com" } };
+    console.log("JS → C# HandleNestedFromJS:", JSON.stringify(container));
     try {
-        const result = await DotNet.invokeMethodAsync("UnionInteropValidation.Standalone", "HandleNestedFromJS", { 
-            id: "test-123",
-            payload: { name: "John", email: "john@example.com" }
-        });
-        console.log("C# response:", result);
-        return result;
+        const returned = await DotNet.invokeMethodAsync(
+            "UnionInteropValidation.Standalone", "HandleNestedFromJS", container);
+        console.log("C# → JS returned Container:", JSON.stringify(returned));
+        return { sent: container, received: returned };
     } catch (error) {
-        console.error("Error calling C# method:", error);
+        console.error("Error:", error);
         return { error: error.message };
     }
 }

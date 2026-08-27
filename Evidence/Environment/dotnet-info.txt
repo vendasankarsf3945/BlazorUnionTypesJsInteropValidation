@@ -1,0 +1,86 @@
+.NET SDK:
+ Version:           11.0.100-preview.7.26381.103
+ Commit:            e2c1e00b3d
+ Workload version:  11.0.100-preview.7.26410.2
+ MSBuild version:   18.10.0-1.26381.103+e2c1e00b3
+
+Runtime Environment:
+ OS Name:     Windows
+ OS Version:  10.0.26200
+ OS Platform: Windows
+ RID:         win-x64
+ Base Path:   C:\Program Files\dotnet\sdk\11.0.100-preview.7.26381.103
+
+.NET workloads installed:
+ [android]
+   Installation Source: SDK 11.0.100-preview.7, VS 18.10.12113.136, VS 18.9.12112.369
+   Manifest Version:    37.0.0-preview.7.2131/11.0.100-preview.7
+   Manifest Path:       C:\Program Files\dotnet\sdk-manifests\11.0.100-preview.7\microsoft.net.sdk.android\37.0.0-preview.7.2131\WorkloadManifest.json
+   Install Type:              Msi
+
+ [ios]
+   Installation Source: SDK 11.0.100-preview.7, VS 18.10.12113.136, VS 18.9.12112.369
+   Manifest Version:    26.5.11997-net11-p7/11.0.100-preview.7
+   Manifest Path:       C:\Program Files\dotnet\sdk-manifests\11.0.100-preview.7\microsoft.net.sdk.ios\26.5.11997-net11-p7\WorkloadManifest.json
+   Install Type:              Msi
+
+ [maccatalyst]
+   Installation Source: SDK 11.0.100-preview.7, VS 18.10.12113.136, VS 18.9.12112.369
+   Manifest Version:    26.5.11997-net11-p7/11.0.100-preview.7
+   Manifest Path:       C:\Program Files\dotnet\sdk-manifests\11.0.100-preview.7\microsoft.net.sdk.maccatalyst\26.5.11997-net11-p7\WorkloadManifest.json
+   Install Type:              Msi
+
+ [maui-windows]
+   Installation Source: SDK 11.0.100-preview.7, VS 18.10.12113.136, VS 18.9.12112.369
+   Manifest Version:    11.0.0-preview.7.26406.9/11.0.100-preview.7
+   Manifest Path:       C:\Program Files\dotnet\sdk-manifests\11.0.100-preview.7\microsoft.net.sdk.maui\11.0.0-preview.7.26406.9\WorkloadManifest.json
+   Install Type:              Msi
+
+ [wasm-tools]
+   Installation Source: SDK 11.0.100-preview.7
+   Manifest Version:    11.0.100-preview.7.26381.103/11.0.100-preview.7
+   Manifest Path:       C:\Program Files\dotnet\sdk-manifests\11.0.100-preview.7\microsoft.net.workload.mono.toolchain.current\11.0.100-preview.7.26381.103\WorkloadManifest.json
+   Install Type:              Msi
+
+Configured to use workload sets when installing new manifests.
+
+Host:
+  Version:      11.0.0-preview.7.26381.103
+  Architecture: x64
+  Commit:       e2c1e00b3d
+
+.NET SDKs installed:
+  8.0.424 [C:\Program Files\dotnet\sdk]
+  9.0.317 [C:\Program Files\dotnet\sdk]
+  10.0.400 [C:\Program Files\dotnet\sdk]
+  11.0.100-preview.7.26381.103 [C:\Program Files\dotnet\sdk]
+
+.NET runtimes installed:
+  Microsoft.AspNetCore.App 8.0.30 [C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App]
+  Microsoft.AspNetCore.App 9.0.19 [C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App]
+  Microsoft.AspNetCore.App 10.0.11 [C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App]
+  Microsoft.AspNetCore.App 11.0.0-preview.7.26381.103 [C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App]
+  Microsoft.NETCore.App 8.0.30 [C:\Program Files\dotnet\shared\Microsoft.NETCore.App]
+  Microsoft.NETCore.App 9.0.19 [C:\Program Files\dotnet\shared\Microsoft.NETCore.App]
+  Microsoft.NETCore.App 10.0.11 [C:\Program Files\dotnet\shared\Microsoft.NETCore.App]
+  Microsoft.NETCore.App 11.0.0-preview.7.26381.103 [C:\Program Files\dotnet\shared\Microsoft.NETCore.App]
+  Microsoft.WindowsDesktop.App 8.0.30 [C:\Program Files\dotnet\shared\Microsoft.WindowsDesktop.App]
+  Microsoft.WindowsDesktop.App 9.0.19 [C:\Program Files\dotnet\shared\Microsoft.WindowsDesktop.App]
+  Microsoft.WindowsDesktop.App 10.0.11 [C:\Program Files\dotnet\shared\Microsoft.WindowsDesktop.App]
+  Microsoft.WindowsDesktop.App 11.0.0-preview.7.26381.103 [C:\Program Files\dotnet\shared\Microsoft.WindowsDesktop.App]
+
+Other architectures found:
+  x86   [C:\Program Files (x86)\dotnet]
+    registered at [HKLM\SOFTWARE\dotnet\Setup\InstalledVersions\x86\InstallLocation]
+
+Environment variables:
+  Not set
+
+global.json file:
+  Not found
+
+Learn more:
+  https://aka.ms/dotnet/info
+
+Download .NET:
+  https://aka.ms/dotnet/download

@@ -4,7 +4,7 @@
  */
 
 export function processApiResponse(response) {
-    console.log("JS received API response:", response);
+    console.log("JS received ApiResponse active case:", JSON.stringify(response));
     
     if (response.url !== undefined) {
         return {
@@ -34,17 +34,14 @@ export function processApiResponse(response) {
 }
 
 export async function callCSharpWithApiResponse() {
-    console.log("JS calling C# method with ApiResponse");
+    const payload = { statusCode: 200, data: "Success from JS", timestamp: new Date().toISOString() };
+    console.log("JS → C# HandleApiResponseFromJS:", JSON.stringify(payload));
     try {
-        const result = await DotNet.invokeMethodAsync("UnionInteropValidation.Standalone", "HandleApiResponseFromJS", { 
-            statusCode: 200,
-            data: "Success from JS",
-            timestamp: new Date().toISOString()
-        });
-        console.log("C# response:", result);
-        return result;
+        const returned = await DotNet.invokeMethodAsync("UnionInteropValidation.Standalone", "HandleApiResponseFromJS", payload);
+        console.log("C# → JS returned ApiResponse:", JSON.stringify(returned));
+        return { sent: payload, received: returned };
     } catch (error) {
-        console.error("Error calling C# method:", error);
+        console.error("Error:", error);
         return { error: error.message };
     }
 }

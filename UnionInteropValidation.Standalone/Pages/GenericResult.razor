@@ -1,6 +1,5 @@
 ﻿@page "/generic-result"
 @inject IJSRuntime JS
-
 @using UnionInteropValidation.Standalone.Models
 
 <PageTitle>Generic Union Pattern Result&lt;T&gt;</PageTitle>
@@ -80,29 +79,17 @@
     private string errorMsg = string.Empty;
     private IJSObjectReference? module;
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender)
-        {
-            try
-            {
-                module = await JS.InvokeAsync<IJSObjectReference>(
-                    "import", "./js/generic-result.js");
-            }
-            catch (Exception ex)
-            {
-                errorMsg = $"Failed to load module: {ex.Message}";
-            }
-        }
-    }
+    private async Task<IJSObjectReference> GetModuleAsync() =>
+        module ??= await JS.InvokeAsync<IJSObjectReference>("import", "./js/generic-result.js");
+
 
     private async Task SendOkString()
     {
         try
         {
             ClearMessages();
-            var unionData = new Ok<string>("Operation succeeded");
-            dynamic jsResult = await module!.InvokeAsync<dynamic>("processResult", unionData);
+            Result<string> union = new Ok<string>("Operation succeeded");
+            dynamic jsResult = await (await GetModuleAsync()).InvokeAsync<dynamic>("processResult", union);
             result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
         }
         catch (Exception ex)
@@ -116,8 +103,8 @@
         try
         {
             ClearMessages();
-            var unionData = new Error<string>("Operation failed");
-            dynamic jsResult = await module!.InvokeAsync<dynamic>("processResult", unionData);
+            Result<string> union = new Error<string>("Operation failed");
+            dynamic jsResult = await (await GetModuleAsync()).InvokeAsync<dynamic>("processResult", union);
             result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
         }
         catch (Exception ex)
@@ -131,8 +118,8 @@
         try
         {
             ClearMessages();
-            var unionData = new Ok<int>(42);
-            dynamic jsResult = await module!.InvokeAsync<dynamic>("processResult", unionData);
+            Result<int> union = new Ok<int>(42);
+            dynamic jsResult = await (await GetModuleAsync()).InvokeAsync<dynamic>("processResult", union);
             result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
         }
         catch (Exception ex)
@@ -146,8 +133,8 @@
         try
         {
             ClearMessages();
-            var unionData = new Error<int>("Invalid input");
-            dynamic jsResult = await module!.InvokeAsync<dynamic>("processResult", unionData);
+            Result<int> union = new Error<int>("Invalid input");
+            dynamic jsResult = await (await GetModuleAsync()).InvokeAsync<dynamic>("processResult", union);
             result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
         }
         catch (Exception ex)
@@ -161,7 +148,7 @@
         try
         {
             ClearMessages();
-            dynamic jsResult = await module!.InvokeAsync<dynamic>("callCSharpWithResult");
+            dynamic jsResult = await (await GetModuleAsync()).InvokeAsync<dynamic>("callCSharpWithResult");
             result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
         }
         catch (Exception ex)
@@ -175,7 +162,7 @@
         try
         {
             ClearMessages();
-            dynamic jsResult = await module!.InvokeAsync<dynamic>("callCSharpWithResultString");
+            dynamic jsResult = await (await GetModuleAsync()).InvokeAsync<dynamic>("callCSharpWithResultString");
             result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
         }
         catch (Exception ex)
@@ -189,7 +176,7 @@
         try
         {
             ClearMessages();
-            dynamic jsResult = await module!.InvokeAsync<dynamic>("callCSharpWithResultInt");
+            dynamic jsResult = await (await GetModuleAsync()).InvokeAsync<dynamic>("callCSharpWithResultInt");
             result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
         }
         catch (Exception ex)
@@ -199,22 +186,13 @@
     }
 
     [JSInvokable]
-    public static object HandleResultFromJS(System.Text.Json.JsonElement json)
+    public static Result<object> HandleResultFromJS(System.Text.Json.JsonElement json)
     {
+        // Result<T> is open-generic; no concrete classifier factory can be attached to it
         var opts = new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-        Result<object> result;
         if (json.TryGetProperty("value", out _))
-            result = System.Text.Json.JsonSerializer.Deserialize<Ok<object>>(json, opts)!;
-        else
-            result = System.Text.Json.JsonSerializer.Deserialize<Error<object>>(json, opts)!;
-        var activeCase = result.Value?.GetType().Name ?? "null";
-        var description = result.Value switch
-        {
-            Ok<object> ok => $"Ok: value={System.Text.Json.JsonSerializer.Serialize(ok.Value)}",
-            Error<object> err => $"Error: message=\"{err.Message}\"",
-            _ => "null active case"
-        };
-        return new { status = "received from JS", activeCase, description };
+            return System.Text.Json.JsonSerializer.Deserialize<Ok<object>>(json, opts)!;
+        return System.Text.Json.JsonSerializer.Deserialize<Error<object>>(json, opts)!;
     }
 
     private void ClearMessages()

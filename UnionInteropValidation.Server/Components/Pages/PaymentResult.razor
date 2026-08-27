@@ -93,8 +93,8 @@
         try
         {
             ClearMessages();
-            var payment = new PaymentApproved("TXN_12345", 99.99m, DateTime.UtcNow);
-            dynamic jsResult = await module!.InvokeAsync<dynamic>("processPayment", payment);
+            var union = (UnionInteropValidation.Server.Models.PaymentResult)new PaymentApproved("TXN_12345", 99.99m, DateTime.UtcNow);
+            dynamic jsResult = await module!.InvokeAsync<dynamic>("processPayment", union);
             result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
         }
         catch (Exception ex)
@@ -108,8 +108,8 @@
         try
         {
             ClearMessages();
-            var payment = new PaymentDeclined("Card declined", 2001);
-            dynamic jsResult = await module!.InvokeAsync<dynamic>("processPayment", payment);
+            var union = (UnionInteropValidation.Server.Models.PaymentResult)new PaymentDeclined("Card declined", 2001);
+            dynamic jsResult = await module!.InvokeAsync<dynamic>("processPayment", union);
             result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
         }
         catch (Exception ex)
@@ -123,8 +123,8 @@
         try
         {
             ClearMessages();
-            var payment = new PaymentPending("REF_54321", DateTime.UtcNow.AddMinutes(5));
-            dynamic jsResult = await module!.InvokeAsync<dynamic>("processPayment", payment);
+            var union = (UnionInteropValidation.Server.Models.PaymentResult)new PaymentPending("REF_54321", DateTime.UtcNow.AddMinutes(5));
+            dynamic jsResult = await module!.InvokeAsync<dynamic>("processPayment", union);
             result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
         }
         catch (Exception ex)
@@ -148,26 +148,8 @@
     }
 
     [JSInvokable]
-    public static object HandlePaymentFromJS(System.Text.Json.JsonElement json)
-    {
-        var opts = new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-        UnionInteropValidation.Server.Models.PaymentResult payment;
-        if (json.TryGetProperty("transactionId", out _))
-            payment = System.Text.Json.JsonSerializer.Deserialize<PaymentApproved>(json, opts)!;
-        else if (json.TryGetProperty("reason", out _))
-            payment = System.Text.Json.JsonSerializer.Deserialize<PaymentDeclined>(json, opts)!;
-        else
-            payment = System.Text.Json.JsonSerializer.Deserialize<PaymentPending>(json, opts)!;
-        var activeCase = payment.Value?.GetType().Name ?? "null";
-        var description = payment.Value switch
-        {
-            PaymentApproved a => $"PaymentApproved: transactionId=\"{a.TransactionId}\", amount={a.Amount}",
-            PaymentDeclined d => $"PaymentDeclined: reason=\"{d.Reason}\", errorCode={d.ErrorCode}",
-            PaymentPending p => $"PaymentPending: referenceId=\"{p.ReferenceId}\"",
-            _ => "null active case"
-        };
-        return new { status = "received from JS", activeCase, description };
-    }
+    public static UnionInteropValidation.Server.Models.PaymentResult HandlePaymentFromJS(
+        UnionInteropValidation.Server.Models.PaymentResult payment) => payment;
 
     private void ClearMessages()
     {

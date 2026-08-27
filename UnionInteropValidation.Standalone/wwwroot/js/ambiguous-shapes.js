@@ -1,58 +1,50 @@
 ﻿/**
- * Ambiguous Shapes - Test with/without JsonUnion classifier
- * Demonstrates the difference between ambiguous and clarified union cases
+ * Ambiguous Shapes — record unions with and without [JsonUnion] classifier
  */
 
-export function processAmbiguous(unionData) {
-    console.log("JS received ambiguous union (no type field):", unionData);
-    
-    // Without $type field, JSON looks identical: { "value": "..." }
-    // We can't tell if it's SimpleSuccess or SimpleError!
+export function processAmbiguous(value) {
+    console.log("JS received SimpleResult (no classifier):", JSON.stringify(value));
     return {
-        warning: "AMBIGUOUS: Cannot distinguish from JSON alone!",
-        value: unionData.value,
-        note: "JSON should have included $type field for disambiguation",
-        receivedJson: JSON.stringify(unionData)
+        warning: "AMBIGUOUS: SimpleSuccess and SimpleError have identical JSON shape",
+        receivedJson: JSON.stringify(value),
+        note: "Add [JsonUnion(TypeClassifier=...)] to the union type to resolve"
     };
 }
 
-export function processTagged(unionData) {
-    console.log("JS received tagged union (with $type field):", unionData);
-    
-    const typeField = unionData.$type;
-    
-    if (typeField === "success") {
-        return {
-            type: "TaggedSuccess",
-            value: unionData.value,
-            display: `✓ Success: "${unionData.value}"`,
-            note: `Discriminated by $type field: "${typeField}"`,
-            receivedJson: JSON.stringify(unionData)
-        };
-    } else if (typeField === "error") {
-        return {
-            type: "TaggedError",
-            value: unionData.value,
-            display: `✗ Error: "${unionData.value}"`,
-            note: `Discriminated by $type field: "${typeField}"`,
-            receivedJson: JSON.stringify(unionData)
-        };
-    } else {
-        return {
-            error: `Unknown $type: "${typeField}"`,
-            receivedJson: JSON.stringify(unionData)
-        };
-    }
+export function processTagged(value) {
+    // C# does NOT emit $type in Preview 7 — JSON is just the case properties
+    console.log("JS received TaggedResult (no $type in C#→JS direction):", JSON.stringify(value));
+    return {
+        receivedJson: JSON.stringify(value),
+        note: "$type absent in C#→JS — classifier handles JS→C# only (JS manually adds $type)"
+    };
 }
 
 export async function callCSharpWithAmbiguous() {
-    console.log("JS calling C# method with ambiguous union");
+    const payload = { value: "from JS (no $type)" };
+    console.log("JS → C# HandleSimpleFromJS:", JSON.stringify(payload));
     try {
-        const result = await DotNet.invokeMethodAsync("UnionInteropValidation.Standalone", "HandleAmbiguousFromJS", { value: "success" });
+        const result = await DotNet.invokeMethodAsync(
+            "UnionInteropValidation.Standalone", "HandleSimpleFromJS", payload);
         console.log("C# response:", result);
         return result;
     } catch (error) {
-        console.error("Error calling C# method:", error);
+        console.error("Ambiguity error from C#:", error);
         return { error: error.message };
     }
 }
+
+export async function callCSharpWithTagged() {
+    const payload = { $type: "TaggedSuccess", value: "from JS (tagged)" };
+    console.log("JS → C# HandleTaggedFromJS:", JSON.stringify(payload));
+    try {
+        const result = await DotNet.invokeMethodAsync(
+            "UnionInteropValidation.Standalone", "HandleTaggedFromJS", payload);
+        console.log("C# returned TaggedResult:", JSON.stringify(result));
+        return result;
+    } catch (error) {
+        console.error("Error:", error);
+        return { error: error.message };
+    }
+}
+

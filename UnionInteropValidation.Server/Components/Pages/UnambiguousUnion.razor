@@ -89,8 +89,8 @@
         try
         {
             ClearMessages();
-            var unionData = new UnambiguousInt(42);
-            dynamic jsResult = await module!.InvokeAsync<dynamic>("processUnambiguous", unionData);
+            var union = (UnionInteropValidation.Server.Models.UnambiguousUnion)42;
+            dynamic jsResult = await module!.InvokeAsync<dynamic>("processUnambiguous", union);
             result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
         }
         catch (Exception ex)
@@ -104,8 +104,8 @@
         try
         {
             ClearMessages();
-            var unionData = new UnambiguousString("hello");
-            dynamic jsResult = await module!.InvokeAsync<dynamic>("processUnambiguous", unionData);
+            var union = (UnionInteropValidation.Server.Models.UnambiguousUnion)"hello";
+            dynamic jsResult = await module!.InvokeAsync<dynamic>("processUnambiguous", union);
             result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
         }
         catch (Exception ex)
@@ -143,23 +143,11 @@
     }
 
     [JSInvokable]
-    public static object HandleUnambiguousFromJS(System.Text.Json.JsonElement json)
+    public static UnionInteropValidation.Server.Models.UnambiguousUnion HandleUnambiguousFromJS(
+        UnionInteropValidation.Server.Models.UnambiguousUnion union)
     {
-        var opts = new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-        UnionInteropValidation.Server.Models.UnambiguousUnion union;
-        // Distinguish by JSON value kind of the 'value' field (number vs string)
-        if (json.TryGetProperty("value", out var v) && v.ValueKind == System.Text.Json.JsonValueKind.Number)
-            union = System.Text.Json.JsonSerializer.Deserialize<UnambiguousInt>(json, opts)!;
-        else
-            union = System.Text.Json.JsonSerializer.Deserialize<UnambiguousString>(json, opts)!;
-        var activeCase = union.Value?.GetType().Name ?? "null";
-        var description = union.Value switch
-        {
-            UnambiguousInt i => $"UnambiguousInt: value={i.Value}",
-            UnambiguousString s => $"UnambiguousString: value=\"{s.Value}\"",
-            _ => "unknown"
-        };
-        return new { status = "received from JS", activeCase, description };
+        // Runtime deserializes raw 42 → int case, "hello" → string case; round-trip the same value
+        return union;
     }
 
     private void ClearMessages()

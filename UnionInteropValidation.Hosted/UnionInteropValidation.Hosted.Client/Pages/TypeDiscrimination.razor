@@ -97,6 +97,9 @@
     private string errorMsg = string.Empty;
     private IJSObjectReference? module;
 
+    private async Task<IJSObjectReference> GetModuleAsync() =>
+        module ??= await JS.InvokeAsync<IJSObjectReference>("import", "./js/type-discrimination.js");
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
@@ -118,8 +121,8 @@
         try
         {
             ClearMessages();
-            var unionData = new PBSuccess("Operation succeeded");
-            dynamic jsResult = await module!.InvokeAsync<dynamic>("processPropertyBased", unionData);
+            PropertyBased union = new PBSuccess("Operation succeeded");
+            dynamic jsResult = await (await GetModuleAsync()).InvokeAsync<dynamic>("processPropertyBased", union);
             result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
         }
         catch (Exception ex)
@@ -133,8 +136,8 @@
         try
         {
             ClearMessages();
-            var unionData = new PBError("Operation failed");
-            dynamic jsResult = await module!.InvokeAsync<dynamic>("processPropertyBased", unionData);
+            PropertyBased union = new PBError("Operation failed");
+            dynamic jsResult = await (await GetModuleAsync()).InvokeAsync<dynamic>("processPropertyBased", union);
             result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
         }
         catch (Exception ex)
@@ -148,8 +151,8 @@
         try
         {
             ClearMessages();
-            var unionData = new TBSuccess("Operation succeeded");
-            dynamic jsResult = await module!.InvokeAsync<dynamic>("processTypeBased", unionData);
+            TypeBased union = new TBSuccess("Operation succeeded");
+            dynamic jsResult = await (await GetModuleAsync()).InvokeAsync<dynamic>("processTypeBased", union);
             result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
         }
         catch (Exception ex)
@@ -163,8 +166,8 @@
         try
         {
             ClearMessages();
-            var unionData = new TBError("Operation failed");
-            dynamic jsResult = await module!.InvokeAsync<dynamic>("processTypeBased", unionData);
+            TypeBased union = new TBError("Operation failed");
+            dynamic jsResult = await (await GetModuleAsync()).InvokeAsync<dynamic>("processTypeBased", union);
             result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
         }
         catch (Exception ex)
@@ -178,7 +181,7 @@
         try
         {
             ClearMessages();
-            dynamic jsResult = await module!.InvokeAsync<dynamic>("callCSharpWithPropertyBased");
+            dynamic jsResult = await (await GetModuleAsync()).InvokeAsync<dynamic>("callCSharpWithPropertyBased");
             result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
         }
         catch (Exception ex)
@@ -192,7 +195,7 @@
         try
         {
             ClearMessages();
-            dynamic jsResult = await module!.InvokeAsync<dynamic>("callCSharpWithTypeBased");
+            dynamic jsResult = await (await GetModuleAsync()).InvokeAsync<dynamic>("callCSharpWithTypeBased");
             result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
         }
         catch (Exception ex)
@@ -204,33 +207,22 @@
     [JSInvokable]
     public static object HandlePropertyBasedFromJS(System.Text.Json.JsonElement json)
     {
-        var opts = new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-        // PBSuccess and PBError share the same JSON shape; first case wins
-        PropertyBased union = System.Text.Json.JsonSerializer.Deserialize<PBSuccess>(json, opts)!;
-        var activeCase = union.Value?.GetType().Name ?? "null";
-        var description = union.Value switch
+        try
         {
-            PBSuccess s => $"PBSuccess: \"{s.Result}\"",
-            PBError e => $"PBError: \"{e.Result}\"",
-            _ => "null active case"
-        };
-        return new { status = "received from JS", activeCase, description, note = "Ambiguous shapes: same JSON structure for both cases" };
+            var opts = new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            var union = System.Text.Json.JsonSerializer.Deserialize<PropertyBased>(json, opts);
+            return new { status = "deserialized", resolved = union.ToString(), note = "Ambiguous: same shape for PBSuccess and PBError" };
+        }
+        catch (Exception ex)
+        {
+            return new { status = "error", error = ex.Message };
+        }
     }
 
     [JSInvokable]
-    public static object HandleTypeBasedFromJS(System.Text.Json.JsonElement json)
+    public static TypeBased HandleTypeBasedFromJS(TypeBased union)
     {
-        var opts = new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-        // TBSuccess and TBError share the same JSON shape; first case wins
-        TypeBased union = System.Text.Json.JsonSerializer.Deserialize<TBSuccess>(json, opts)!;
-        var activeCase = union.Value?.GetType().Name ?? "null";
-        var description = union.Value switch
-        {
-            TBSuccess s => $"TBSuccess: \"{s.Result}\"",
-            TBError e => $"TBError: \"{e.Result}\"",
-            _ => "null active case"
-        };
-        return new { status = "received from JS", activeCase, description };
+        return union;
     }
 
     private void ClearMessages()

@@ -1,73 +1,53 @@
 ﻿/**
- * Generic Result - Test Result<T> with different type parameters
- * Demonstrates generic union types work with any type parameter
+ * Generic Result — Result<T> union
+ * Ok<T>: { "value": T } | Error<T>: { "message": "..." } — self-discriminating by field name.
  */
 
 export function processResult(result) {
-    console.log("JS received generic result:", result);
-    
+    console.log("JS received Result:", JSON.stringify(result));
     if (result.value !== undefined) {
-        return {
-            type: "Ok",
-            value: result.value,
-            valueType: typeof result.value,
-            display: `Ok: ${JSON.stringify(result.value)}`
-        };
+        return { case: "Ok", value: result.value, jsonType: typeof result.value, receivedJson: JSON.stringify(result) };
     } else if (result.message !== undefined) {
-        return {
-            type: "Error",
-            message: result.message,
-            display: `Error: ${result.message}`
-        };
+        return { case: "Error", message: result.message, receivedJson: JSON.stringify(result) };
     }
-    
     return { error: "Unknown result type" };
 }
 
-export async function callCSharpWithResultString() {
-    console.log("JS calling C# method with Result<string>");
+export async function callCSharpWithResult() {
+    const payload = { message: "Error from JS" };
+    console.log("JS → C# HandleResultFromJS (Error<object>):", JSON.stringify(payload));
     try {
-        const result = await DotNet.invokeMethodAsync("UnionInteropValidation.Standalone", "HandleResultFromJS", { value: "Success from JS" });
-        console.log("C# response:", result);
-        return result;
+        const returned = await DotNet.invokeMethodAsync("UnionInteropValidation.Standalone", "HandleResultFromJS", payload);
+        console.log("C# → JS returned Result:", JSON.stringify(returned));
+        return { sent: payload, received: returned };
     } catch (error) {
-        console.error("Error calling C# method:", error);
-        return { error: error.message };
-    }
-}
-
-export async function callCSharpWithResultInt() {
-    console.log("JS calling C# method with Result<int>");
-    try {
-        const result = await DotNet.invokeMethodAsync("UnionInteropValidation.Standalone", "HandleResultFromJS", { value: 999 });
-        console.log("C# response:", result);
-        return result;
-    } catch (error) {
-        console.error("Error calling C# method:", error);
+        console.error("Error:", error);
         return { error: error.message };
     }
 }
 
 export async function callCSharpWithResultString() {
-    console.log("JS calling C# method with Result<string> - Ok case");
+    const payload = { value: "Success from JS" };
+    console.log("JS → C# HandleResultFromJS (Ok<string>):", JSON.stringify(payload));
     try {
-        const result = await DotNet.invokeMethodAsync("UnionInteropValidation.Hosted.Client", "HandleResultFromJS", { value: "Success from JS" });
-        console.log("C# response:", result);
-        return result;
+        const returned = await DotNet.invokeMethodAsync("UnionInteropValidation.Standalone", "HandleResultFromJS", payload);
+        console.log("C# → JS returned Result:", JSON.stringify(returned));
+        return { sent: payload, received: returned };
     } catch (error) {
-        console.error("Error calling C# method:", error);
+        console.error("Error:", error);
         return { error: error.message };
     }
 }
 
 export async function callCSharpWithResultInt() {
-    console.log("JS calling C# method with Result<int> - Ok case");
+    const payload = { value: 999 };
+    console.log("JS → C# HandleResultFromJS (Ok<int>):", JSON.stringify(payload));
     try {
-        const result = await DotNet.invokeMethodAsync("UnionInteropValidation.Hosted.Client", "HandleResultFromJS", { value: 999 });
-        console.log("C# response:", result);
-        return result;
+        const returned = await DotNet.invokeMethodAsync("UnionInteropValidation.Standalone", "HandleResultFromJS", payload);
+        console.log("C# → JS returned Result:", JSON.stringify(returned));
+        return { sent: payload, received: returned };
     } catch (error) {
-        console.error("Error calling C# method:", error);
+        console.error("Error:", error);
         return { error: error.message };
     }
 }

@@ -1,6 +1,5 @@
 ﻿@page "/nullable-union"
 @inject IJSRuntime JS
-
 @using UnionInteropValidation.Standalone.Models
 
 <PageTitle>Null Active Case</PageTitle>
@@ -19,13 +18,13 @@
                         <div class="card-body">
                             <div class="d-grid gap-2">
                                 <button class="btn btn-success btn-sm" @onclick="SendWithValue">
-                                    Non-null value: WithValue("Test", 42)
+                                    Non-null int? case: (int?)42
                                 </button>
                                 <button class="btn btn-success btn-sm" @onclick="SendWithNull">
-                                    Null active case: WithValue("Null", null)
+                                    Null active case: (int?)null
                                 </button>
                                 <button class="btn btn-success btn-sm" @onclick="SendEmptyCase">
-                                    Empty case: EmptyCase
+                                    String case: "string case"
                                 </button>
                             </div>
                         </div>
@@ -96,8 +95,8 @@
         try
         {
             ClearMessages();
-            var unionData = new WithValue("Test Value", 42);
-            dynamic jsResult = await module!.InvokeAsync<dynamic>("processNullable", unionData);
+            var union = (UnionInteropValidation.Standalone.Models.NullableUnion)(int?)42;
+            dynamic jsResult = await module!.InvokeAsync<dynamic>("processNullable", union);
             result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
         }
         catch (Exception ex)
@@ -111,8 +110,8 @@
         try
         {
             ClearMessages();
-            var unionData = new WithValue("Null Value", null);
-            dynamic jsResult = await module!.InvokeAsync<dynamic>("processNullable", unionData);
+            var union = (UnionInteropValidation.Standalone.Models.NullableUnion)(int?)null;
+            dynamic jsResult = await module!.InvokeAsync<dynamic>("processNullable", union);
             result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
         }
         catch (Exception ex)
@@ -126,8 +125,8 @@
         try
         {
             ClearMessages();
-            var unionData = new EmptyCase();
-            dynamic jsResult = await module!.InvokeAsync<dynamic>("processNullable", unionData);
+            var union = (UnionInteropValidation.Standalone.Models.NullableUnion)"string case";
+            dynamic jsResult = await module!.InvokeAsync<dynamic>("processNullable", union);
             result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
         }
         catch (Exception ex)
@@ -165,22 +164,10 @@
     }
 
     [JSInvokable]
-    public static object HandleNullableFromJS(System.Text.Json.JsonElement json)
+    public static UnionInteropValidation.Standalone.Models.NullableUnion HandleNullableFromJS(
+        UnionInteropValidation.Standalone.Models.NullableUnion union)
     {
-        var opts = new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-        UnionInteropValidation.Standalone.Models.NullableUnion union;
-        if (json.TryGetProperty("message", out _))
-            union = System.Text.Json.JsonSerializer.Deserialize<WithValue>(json, opts)!;
-        else
-            union = new EmptyCase();
-        var activeCase = union.Value?.GetType().Name ?? "null";
-        var description = union.Value switch
-        {
-            WithValue w => $"WithValue: message=\"{w.Message}\", value={w.Value?.ToString() ?? "null"}",
-            EmptyCase => "EmptyCase",
-            _ => "null active case"
-        };
-        return new { status = "received from JS", activeCase, description };
+        return union;
     }
 
     private void ClearMessages()

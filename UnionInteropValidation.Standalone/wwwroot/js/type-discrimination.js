@@ -1,67 +1,50 @@
 ﻿/**
- * Type Discrimination - Compare property-based vs type-based discrimination
- * Demonstrates how to distinguish between cases with identical structures
+ * Type Discrimination — property-based vs JsonTypeClassifierFactory
  */
 
-export function processPropertyBased(result) {
-    console.log("JS received property-based union:", result);
-    
+export function processPropertyBased(value) {
+    console.log("JS received PropertyBased (no classifier):", JSON.stringify(value));
     return {
-        type: "PropertyBased",
-        result: result.result,
-        warning: "Property-based: JSON structure identical for both cases",
-        note: "Cannot distinguish PBSuccess from PBError by JSON alone - need application logic",
-        receivedJson: JSON.stringify(result)
+        type: "PropertyBased (ambiguous)",
+        result: value.result,
+        warning: "Same JSON shape for PBSuccess and PBError — cannot distinguish without classifier",
+        receivedJson: JSON.stringify(value)
     };
 }
 
-export function processTypeBased(result) {
-    console.log("JS received type-based union:", result);
-    const typeField = result.$type;
-    
-    if (typeField === "ok") {
-        return {
-            type: "TBSuccess",
-            result: result.result,
-            typeField: typeField,
-            display: `Type-Based Success`,
-            note: `Discriminated by $type field: "${typeField}"`,
-            receivedJson: JSON.stringify(result)
-        };
-    } else if (typeField === "fail") {
-        return {
-            type: "TBError",
-            result: result.result,
-            typeField: typeField,
-            display: `Type-Based Error`,
-            note: `Discriminated by $type field: "${typeField}"`,
-            receivedJson: JSON.stringify(result)
-        };
-    }
-    
-    return { error: `Unknown $type: "${typeField}"` };
+export function processTypeBased(value) {
+    // C# does NOT emit $type in Preview 7 — JSON is just the case properties
+    console.log("JS received TypeBased (no $type in C#→JS direction):", JSON.stringify(value));
+    return {
+        receivedJson: JSON.stringify(value),
+        note: "$type absent in C#→JS — classifier handles JS→C# only (JS manually adds $type)"
+    };
 }
 
 export async function callCSharpWithPropertyBased() {
-    console.log("JS calling C# method with property-based union");
+    const payload = { result: "success from JS (ambiguous)" };
+    console.log("JS → C# HandlePropertyBasedFromJS:", JSON.stringify(payload));
     try {
-        const result = await DotNet.invokeMethodAsync("UnionInteropValidation.Standalone", "HandlePropertyBasedFromJS", { result: "success from JS" });
+        const result = await DotNet.invokeMethodAsync(
+            "UnionInteropValidation.Standalone", "HandlePropertyBasedFromJS", payload);
         console.log("C# response:", result);
         return result;
     } catch (error) {
-        console.error("Error calling C# method:", error);
+        console.error("Ambiguity error from C#:", error);
         return { error: error.message };
     }
 }
 
 export async function callCSharpWithTypeBased() {
-    console.log("JS calling C# method with type-based union");
+    const payload = { $type: "TBSuccess", result: "success from JS (typed)" };
+    console.log("JS → C# HandleTypeBasedFromJS:", JSON.stringify(payload));
     try {
-        const result = await DotNet.invokeMethodAsync("UnionInteropValidation.Standalone", "HandleTypeBasedFromJS", { result: "success from JS" });
-        console.log("C# response:", result);
+        const result = await DotNet.invokeMethodAsync(
+            "UnionInteropValidation.Standalone", "HandleTypeBasedFromJS", payload);
+        console.log("C# returned TypeBased:", JSON.stringify(result));
         return result;
     } catch (error) {
-        console.error("Error calling C# method:", error);
+        console.error("Error:", error);
         return { error: error.message };
     }
 }

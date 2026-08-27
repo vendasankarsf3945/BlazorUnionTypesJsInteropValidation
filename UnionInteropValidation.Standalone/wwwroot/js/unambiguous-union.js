@@ -1,39 +1,42 @@
 ﻿/**
- * Unambiguous Union - Test int vs string unions
- * Demonstrates that different JSON types (number vs string) are self-discriminating
+ * Unambiguous Union — union(int, string)
+ * int case arrives as a raw JSON number; string case as a raw JSON string.
+ * No wrapper object: the active case value IS the entire JSON payload.
  */
 
-export function processUnambiguous(unionData) {
-    console.log("JS received unambiguous union:", unionData);
-    
+export function processUnambiguous(value) {
+    console.log("JS received UnambiguousUnion active case:", value, "| JSON type:", typeof value);
     return {
-        type: typeof unionData.value === "number" ? "int" : "string",
-        receivedValue: unionData.value,
-        display: `Received ${typeof unionData.value === "number" ? "number" : "string"}: ${unionData.value}`
+        receivedValue: value,
+        jsonType: typeof value,
+        display: typeof value === "number"
+            ? `int case: ${value}`
+            : `string case: "${value}"`
     };
 }
 
 export async function receiveInt() {
-    console.log("JS calling C# method with UnambiguousInt");
+    console.log("JS → C#: sending int union case 99");
     try {
-        const result = await DotNet.invokeMethodAsync("UnionInteropValidation.Standalone", "HandleUnambiguousFromJS", { value: 99 });
-        console.log("C# response:", result);
-        return result;
+        const returned = await DotNet.invokeMethodAsync(
+            "UnionInteropValidation.Standalone", "HandleUnambiguousFromJS", 99);
+        console.log("C# → JS: returned union active case:", returned, "| type:", typeof returned);
+        return { sent: 99, received: returned, receivedType: typeof returned };
     } catch (error) {
-        console.error("Error calling C# method:", error);
+        console.error("Error:", error);
         return { error: error.message };
     }
 }
 
 export async function receiveString() {
-    console.log("JS calling C# method with UnambiguousString");
+    console.log("JS → C#: sending string union case");
     try {
-        const result = await DotNet.invokeMethodAsync("UnionInteropValidation.Standalone", "HandleUnambiguousFromJS", { value: "from javascript" });
-        console.log("C# response:", result);
-        return result;
+        const returned = await DotNet.invokeMethodAsync(
+            "UnionInteropValidation.Standalone", "HandleUnambiguousFromJS", "from javascript");
+        console.log("C# → JS: returned union active case:", returned, "| type:", typeof returned);
+        return { sent: "from javascript", received: returned, receivedType: typeof returned };
     } catch (error) {
-        console.error("Error calling C# method:", error);
+        console.error("Error:", error);
         return { error: error.message };
     }
 }
-

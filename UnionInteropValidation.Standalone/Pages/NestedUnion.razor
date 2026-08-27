@@ -1,4 +1,4 @@
-﻿@page "/nested-union"
+@page "/nested-union"
 @inject IJSRuntime JS
 
 @using UnionInteropValidation.Standalone.Models
@@ -14,16 +14,30 @@
                 <div class="col-md-6 mb-4">
                     <div class="card">
                         <div class="card-header bg-success text-white">
-                            <h5 class="mb-0">C# → JavaScript</h5>
+                            <h5 class="mb-0">C# ? JavaScript</h5>
                         </div>
                         <div class="card-body">
                             <div class="d-grid gap-2">
                                 <button class="btn btn-success btn-sm" @onclick="SendUserData">
-                                    Nested union with null/int in UserData
+                                    UserData active case (name + email)
                                 </button>
                                 <button class="btn btn-success btn-sm" @onclick="SendErrorData">
-                                    Nested union with string in ErrorData
+                                    ErrorData active case (code + message)
                                 </button>
+                                <button class="btn btn-warning btn-sm" @onclick="SendNullPayload">
+                                    Null payload: Container.Payload = null
+                                </button>
+                                <div class="border-top mt-2 pt-2">
+                                    <button class="btn btn-outline-dark btn-sm w-100 mb-1" @onclick="SendNullIntInContainer">
+                                        Null int? value inside container
+                                    </button>
+                                    <button class="btn btn-outline-dark btn-sm w-100 mb-1" @onclick="SendIntInContainer">
+                                        Integer 42 inside container
+                                    </button>
+                                    <button class="btn btn-outline-dark btn-sm w-100" @onclick="SendStringInContainer">
+                                        String value inside container
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -32,12 +46,12 @@
                 <div class="col-md-6 mb-4">
                     <div class="card">
                         <div class="card-header bg-info text-white">
-                            <h5 class="mb-0">JavaScript → C#</h5>
+                            <h5 class="mb-0">JavaScript ? C#</h5>
                         </div>
                         <div class="card-body">
                             <div class="d-grid gap-2">
                                 <button class="btn btn-info btn-sm" @onclick="CallCSharpWithNestedUnion">
-                                    Nested union round-trip (JS → .NET)
+                                    Nested union round-trip (JS ? .NET)
                                 </button>
                             </div>
                         </div>
@@ -69,21 +83,8 @@
     private string errorMsg = string.Empty;
     private IJSObjectReference? module;
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender)
-        {
-            try
-            {
-                module = await JS.InvokeAsync<IJSObjectReference>(
-                    "import", "./js/nested-union.js");
-            }
-            catch (Exception ex)
-            {
-                errorMsg = $"Failed to load module: {ex.Message}";
-            }
-        }
-    }
+    private async Task<IJSObjectReference> GetModuleAsync() =>
+        module ??= await JS.InvokeAsync<IJSObjectReference>("import", "./js/nested-union.js");
 
     private async Task SendUserData()
     {
@@ -94,7 +95,7 @@
             {
                 Payload = new UserData("John Doe", "john@example.com")
             };
-            dynamic jsResult = await module!.InvokeAsync<dynamic>("processNested", container);
+            dynamic jsResult = await (await GetModuleAsync()).InvokeAsync<dynamic>("processNested", container);
             result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
         }
         catch (Exception ex)
@@ -112,7 +113,58 @@
             {
                 Payload = new ErrorData("ERR_001", "Operation failed")
             };
-            dynamic jsResult = await module!.InvokeAsync<dynamic>("processNested", container);
+            dynamic jsResult = await (await GetModuleAsync()).InvokeAsync<dynamic>("processNested", container);
+            result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+        }
+        catch (Exception ex)
+        {
+            errorMsg = ex.Message;
+        }
+    }
+
+    private async Task SendNullIntInContainer()
+    {
+        try
+        {
+            ClearMessages();
+            var container = new NullableContainer { Value = null };
+            dynamic jsResult = await (await GetModuleAsync()).InvokeAsync<dynamic>("processPrimitive", container);
+            result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+        }
+        catch (Exception ex) { errorMsg = ex.Message; }
+    }
+
+    private async Task SendIntInContainer()
+    {
+        try
+        {
+            ClearMessages();
+            var container = new NullableContainer { Value = (UnionInteropValidation.Standalone.Models.NullableUnion)(int?)42 };
+            dynamic jsResult = await (await GetModuleAsync()).InvokeAsync<dynamic>("processPrimitive", container);
+            result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+        }
+        catch (Exception ex) { errorMsg = ex.Message; }
+    }
+
+    private async Task SendStringInContainer()
+    {
+        try
+        {
+            ClearMessages();
+            var container = new NullableContainer { Value = (UnionInteropValidation.Standalone.Models.NullableUnion)"hello" };
+            dynamic jsResult = await (await GetModuleAsync()).InvokeAsync<dynamic>("processPrimitive", container);
+            result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+        }
+        catch (Exception ex) { errorMsg = ex.Message; }
+    }
+
+    private async Task SendNullPayload()
+    {
+        try
+        {
+            ClearMessages();
+            var container = new Container { Payload = null };
+            dynamic jsResult = await (await GetModuleAsync()).InvokeAsync<dynamic>("processNested", container);
             result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
         }
         catch (Exception ex)
@@ -126,7 +178,7 @@
         try
         {
             ClearMessages();
-            dynamic jsResult = await module!.InvokeAsync<dynamic>("callCSharpWithNestedUnion");
+            dynamic jsResult = await (await GetModuleAsync()).InvokeAsync<dynamic>("callCSharpWithNestedUnion");
             result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
         }
         catch (Exception ex)
@@ -136,26 +188,9 @@
     }
 
     [JSInvokable]
-    public static object HandleNestedFromJS(System.Text.Json.JsonElement json)
+    public static Container HandleNestedFromJS(Container container)
     {
-        var opts = new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-        var id = json.TryGetProperty("id", out var idElem) ? idElem.GetString() ?? "" : "";
-        UnionInteropValidation.Standalone.Models.NestedUnion payload = default;
-        if (json.TryGetProperty("payload", out var payloadElem))
-        {
-            if (payloadElem.TryGetProperty("name", out _))
-                payload = System.Text.Json.JsonSerializer.Deserialize<UserData>(payloadElem, opts)!;
-            else
-                payload = System.Text.Json.JsonSerializer.Deserialize<ErrorData>(payloadElem, opts)!;
-        }
-        var nestedCase = payload.Value?.GetType().Name ?? "null";
-        var description = payload.Value switch
-        {
-            UserData u => $"UserData: name=\"{u.Name}\", email=\"{u.Email}\"",
-            ErrorData e => $"ErrorData: code=\"{e.Code}\", message=\"{e.Message}\"",
-            _ => "null payload"
-        };
-        return new { status = "received from JS", containerId = id, nestedCase, description };
+        return container;
     }
 
     private void ClearMessages()

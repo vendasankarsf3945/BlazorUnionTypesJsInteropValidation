@@ -68,29 +68,16 @@
     private string errorMsg = string.Empty;
     private IJSObjectReference? module;
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender)
-        {
-            try
-            {
-                module = await JS.InvokeAsync<IJSObjectReference>(
-                    "import", "./js/unambiguous-union.js");
-            }
-            catch (Exception ex)
-            {
-                errorMsg = $"Failed to load JavaScript module: {ex.Message}";
-            }
-        }
-    }
+    private async Task<IJSObjectReference> GetModuleAsync() =>
+        module ??= await JS.InvokeAsync<IJSObjectReference>("import", "./js/unambiguous-union.js");
 
     private async Task SendIntToJS()
     {
         try
         {
             ClearMessages();
-            var unionData = new UnambiguousInt(42);
-            dynamic jsResult = await module!.InvokeAsync<dynamic>("processUnambiguous", unionData);
+            var union = (UnionInteropValidation.Standalone.Models.UnambiguousUnion)42;
+            dynamic jsResult = await (await GetModuleAsync()).InvokeAsync<dynamic>("processUnambiguous", union);
             result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
         }
         catch (Exception ex)
@@ -104,8 +91,8 @@
         try
         {
             ClearMessages();
-            var unionData = new UnambiguousString("hello");
-            dynamic jsResult = await module!.InvokeAsync<dynamic>("processUnambiguous", unionData);
+            var union = (UnionInteropValidation.Standalone.Models.UnambiguousUnion)"hello";
+            dynamic jsResult = await (await GetModuleAsync()).InvokeAsync<dynamic>("processUnambiguous", union);
             result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
         }
         catch (Exception ex)
@@ -119,7 +106,7 @@
         try
         {
             ClearMessages();
-            dynamic jsResult = await module!.InvokeAsync<dynamic>("receiveInt");
+            dynamic jsResult = await (await GetModuleAsync()).InvokeAsync<dynamic>("receiveInt");
             result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
         }
         catch (Exception ex)
@@ -133,7 +120,7 @@
         try
         {
             ClearMessages();
-            dynamic jsResult = await module!.InvokeAsync<dynamic>("receiveString");
+            dynamic jsResult = await (await GetModuleAsync()).InvokeAsync<dynamic>("receiveString");
             result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
         }
         catch (Exception ex)
@@ -143,23 +130,10 @@
     }
 
     [JSInvokable]
-    public static object HandleUnambiguousFromJS(System.Text.Json.JsonElement json)
+    public static UnionInteropValidation.Standalone.Models.UnambiguousUnion HandleUnambiguousFromJS(
+        UnionInteropValidation.Standalone.Models.UnambiguousUnion union)
     {
-        var opts = new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-        UnionInteropValidation.Standalone.Models.UnambiguousUnion union;
-        // Distinguish by JSON value kind of the 'value' field (number vs string)
-        if (json.TryGetProperty("value", out var v) && v.ValueKind == System.Text.Json.JsonValueKind.Number)
-            union = System.Text.Json.JsonSerializer.Deserialize<UnambiguousInt>(json, opts)!;
-        else
-            union = System.Text.Json.JsonSerializer.Deserialize<UnambiguousString>(json, opts)!;
-        var activeCase = union.Value?.GetType().Name ?? "null";
-        var description = union.Value switch
-        {
-            UnambiguousInt i => $"UnambiguousInt: value={i.Value}",
-            UnambiguousString s => $"UnambiguousString: value=\"{s.Value}\"",
-            _ => "unknown"
-        };
-        return new { status = "received from JS", activeCase, description };
+        return union;
     }
 
     private void ClearMessages()
@@ -168,4 +142,3 @@
         errorMsg = string.Empty;
     }
 }
-

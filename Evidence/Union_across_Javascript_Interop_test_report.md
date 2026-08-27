@@ -4,40 +4,16 @@
 
 **Issue:** [#68481](https://github.com/dotnet/aspnetcore/issues/68481)
 
-**Configuration Tested:** Blazor Interactive Server, Interactive WebAssembly and Standalone WebAssembly.
+**Configuration Tested:** Blazor Server, Hosted WebAssembly and Standalone WebAssembly.
 
-**Build tested:** .NET 11.0 (from `dotnet --info`)
+**Build tested:** 11.0.100-preview.7.26381.103 (from `dotnet --info`)
 
-**Sample:** BlazorUnionTypesJsInteropValidation
+**Also exercised:** Published Release output, Trimmed WebAssembly client
+**OS, browser, IDE:** Windows 10, Microsoft Edge, VisualStudio code 
 
-**Result:** 35 validations passed, 2 issues found (see Issues section)
+**Sample:** [BlazorUnionTypesJsInteropValidation](https://github.com/vendasankarsf3945/BlazorUnionTypesJsInteropValidation)
 
----
-
-## Additional Coverage
-
-**Configurations tested:** 
-- Debug (development mode)
-- Published Output
-- Release (AOT compilation with `/p:RunAOTCompilation=true`)
-
-**Deployment models tested:**
-- UnionInteropValidation.Server (Blazor Server + AOT)
-- UnionInteropValidation.Standalone (Standalone WebAssembly)
-- UnionInteropValidation.Hosted (Hosted WebAssembly)
-
-**Also exercised:**
-- JavaScript Interop (C# ↔ JS bidirectional communication)
-- Union type deserialization and serialization
-- JSON validation and error reporting
-- Property-based discrimination vs. Type-based discrimination ($type classifier)
-- Round-trip serialization for all union case types
-- Null active case handling
-- Nested union structures
-- Ambiguous union case matching
-- Record types with and without JSON classifiers
-
-**OS, browser, IDE:** Windows 11, Chrome/Edge, Visual Studio Code
+**Result:** 37 validations passed
 
 ---
 
@@ -49,88 +25,77 @@ Based on issue #68481 requirements - test each union type in both directions thr
 
 | No. | Scenario | Result | Evidence |
 |------|----------|--------|----------|
-| **01** | A union whose active case is null | Pass | [Null active case](Evidence/NullableUnion_NullActiveCase/Null_active_case.png) |
-| **02** | A union whose active case is an integer | Pass | [Integer round-trip](Evidence/JavaScriptToDotNet_RoundTrip/Int-round-trip.png) |
-| **03** | A union whose active case is a string | Pass | [String round-trip](Evidence/JavaScriptToDotNet_RoundTrip/String-round-trip.png) |
-| **04** | A nested union with a null value inside a container object | Pass | [Nested round-trip](Evidence/NestedUnion_InContainerObject/Round_trip_validation.png) |
-| **05** | A nested union with an integer value inside a container object | Pass | [Nested round-trip](Evidence/NestedUnion_InContainerObject/Round_trip_validation.png) |
-| **06** | A nested union with a string value inside a container object | Pass | [Nested round-trip](Evidence/NestedUnion_InContainerObject/Round_trip_validation.png) |
-| **07** | JavaScript returns a payload with missing required properties | Pass | [Missing property error](Evidence/InvalidJson_NoMatchingUnionCase/Field-validation-error.png) |
-| **08** | JavaScript returns a payload containing an invalid type | Pass | [Invalid type error](Evidence/InvalidJson_NoMatchingUnionCase/Invalid-type.png) |
-| **09** | JavaScript returns an ambiguous shape without a classifier | Pass | [Property-based ambiguity](Evidence/AmbiguousUnion_MultipleMatches/Property-based-match-ambiguity.png) |
-| **10** | JavaScript returns a completely invalid structure | Pass | [Invalid JSON error](Evidence/InvalidJson_NoMatchingUnionCase/Invalid-json.png) |
-| **11** | Multiple union cases match without a classifier | Pass | [Multiple matching cases](Evidence/AmbiguousUnion_MultipleMatches/Could-match-multiple%20cases.png) |
-| **12** | Multiple record shapes match during deserialization | Pass | [Property-based ambiguity](Evidence/AmbiguousUnion_MultipleMatches/Property-based-match-ambiguity.png) |
-| **13** | First record type without a JsonUnion classifier | Pass | [Property-based discrimination](Evidence/AmbiguousUnion_MultipleMatches/Property-based-match-ambiguity.png) |
-| **14** | Second record type without a JsonUnion classifier | Pass | [Property-based discrimination](Evidence/AmbiguousUnion_MultipleMatches/Property-based-match-ambiguity.png) |
-| **15** | First record type with a JsonUnion classifier | Pass | [Classifier resolution](Evidence/RecordUnion_WithJsonUnion/Classifier-resolution.png) |
-| **16** | Second record type with a JsonUnion classifier | Pass | [Unambiguous via classifier](Evidence/RecordUnion_WithJsonUnion/Unambiguous-via-classifier.png) |
-| **17** | Classifier-based record union round-trip | Pass | [Using $type classifier](Evidence/RecordUnion_WithJsonUnion/Using-$type-classifier.png) |
-| **18** | Integer case arrives in JavaScript as a number | Pass | [Integer case](Evidence/IntCase_DotNetToJavaScript.png) |
-| **19** | String case arrives in JavaScript as a string | Pass | [String case](Evidence/StringCase_DotNetToJavaScript.png) |
-| **20** | Success record transmitted without wrapper object | Pass | [Success response](Evidence/RecordCase_NoWrapperObject/ApiResponse_Success_case.png) |
-| **21** | Failure record transmitted without wrapper object | Pass | [Failure response](Evidence/RecordCase_NoWrapperObject/ApiResponse_Failure_case.png) |
-| **22** | Redirect record transmitted without wrapper object | Pass | [Redirect response](Evidence/RecordCase_NoWrapperObject/ApiResponse_Redirect_case.png) |
-| **23** | Integer union round-trip (JS → .NET) — `UnambiguousInt` active case deserialized | Pass | [Integer round-trip](Evidence/JavaScriptToDotNet_RoundTrip/Int-round-trip.png) |
-| **24** | String union round-trip (JS → .NET) — `UnambiguousString` active case deserialized | Pass | [String round-trip](Evidence/JavaScriptToDotNet_RoundTrip/String-round-trip.png) |
-| **25** | Record union round-trip (JS → .NET) — multi-case `ApiResponse` active case deserialized | Pass | [Multi-case round-trip](Evidence/JavaScriptToDotNet_RoundTrip/Multi-case%20round-trip.png) |
-| **26** | Null union round-trip (JS → .NET) — null active case preserved | Pass | [Null round-trip](Evidence/NullActiveCase_RoundTrip/Null-case-round-trip.png) |
-| **27** | Null active case preserved through interop | Pass | [Null active case](Evidence/NullableUnion_NullActiveCase/Null_active_case.png) |
-| **28** | JS invokes .NET — `TaggedResult` received; `TaggedSuccess` active case deserialized from ambiguous JSON | Pass | [Ambiguous union](Evidence/JSInvokesDotNet_UnionParameter/JS-invokes-C%23-with-ambiguous-union.png) |
-| **29** | JS invokes .NET — `PropertyBased` union received; `PBSuccess` active case deserialized | Pass | [Property-based union](Evidence/JSInvokesDotNet_UnionParameter/JS-invokes-C%23-with-classified-union.png) |
-| **30** | JS invokes .NET — `TypeBased` union received; `TBSuccess` active case deserialized | Pass | [Type-based union](Evidence/JSInvokesDotNet_UnionParameter/JS-invokes-C%23-with-type-based-union.png) |
-| **31** | JS invokes .NET — `PaymentResult` received; `PaymentApproved` active case deserialized from complex JSON | Pass | [Complex multi-case union](Evidence/JSInvokesDotNet_UnionParameter/JS-invokes-C%23-with-complex-union.png) |
-| **32** | JS invokes .NET — `Result<T>` received; `Ok` active case deserialized with string value | Pass | [Generic result Ok string](Evidence/JSInvokesDotNet_UnionParameter/JS-invokes-C%23-with-generic-result-ok-string.png) |
-| **33** | JS invokes .NET — `Result<T>` received; `Ok` active case deserialized with int value | Pass | [Generic result Ok int](Evidence/JSInvokesDotNet_UnionParameter/JS-invokes-C%23-with-generic-result-ok-int.png) |
-| **34** | JS invokes .NET — `IntResult` received; `IntSuccess` active case deserialized (value type union) | Pass | [IntResult value type](Evidence/JSInvokesDotNet_UnionParameter/JS-invokes-C%23-with-IntResult-value-type.png) |
-| **35** | JS invokes .NET — `StringResult` received; `StringSuccess` active case deserialized (reference type union) | Pass | [StringResult reference type](Evidence/JSInvokesDotNet_UnionParameter/JS-invokes-C%23-with-StringResult-reference-type.png) |
+| **01** | `NullableUnion(int?, string)` — Null active case preserved across interop (`null` round-trip) | Pass | [Null active case](https://github.com/vendasankarsf3945/BlazorUnionTypesJsInteropValidation/blob/main/Evidence/NullableUnion_NullActiveCase/Null_active_case.png) |
+| **02** | `UnambiguousUnion(int, string)` — Primitive round-trip for `int` (JS→C# and C#→JS) | Pass | [Integer round-trip](https://github.com/vendasankarsf3945/BlazorUnionTypesJsInteropValidation/blob/main/Evidence/JavaScriptToDotNet_RoundTrip/Int-round-trip.png) |
+| **03** | `UnambiguousUnion(int, string)` — Primitive round-trip for `string` (JS→C# and C#→JS) | Pass | [String round-trip](https://github.com/vendasankarsf3945/BlazorUnionTypesJsInteropValidation/blob/main/Evidence/JavaScriptToDotNet_RoundTrip/String-round-trip.png) |
+| **04** | `NestedUnion(UserData, ErrorData)` inside `Container.Payload` — nested value `null` preserved | Pass | [Nested null payload](https://github.com/vendasankarsf3945/BlazorUnionTypesJsInteropValidation/blob/main/Evidence/NestedUnion_InContainerObject/Nested_null_payload.png) |
+| **05** | `NestedUnion(UserData, ErrorData)` inside `Container.Payload` — nested `UserData` preserved | Pass | [Nested user payload](https://github.com/vendasankarsf3945/BlazorUnionTypesJsInteropValidation/blob/main/Evidence/NestedUnion_InContainerObject/Nested_user_payload.png) |
+| **06** | `NestedUnion(UserData, ErrorData)` inside `Container.Payload` — nested `ErrorData` preserved | Pass | [Nested error payload](https://github.com/vendasankarsf3945/BlazorUnionTypesJsInteropValidation/blob/main/Evidence/NestedUnion_InContainerObject/Nested_error_payload.png) |
+| **07** | JavaScript → .NET: payload missing required properties produces validation error | Pass | [Missing property error](https://github.com/vendasankarsf3945/BlazorUnionTypesJsInteropValidation/blob/main/Evidence/InvalidJson_NoMatchingUnionCase/Field-validation-error.png) |
+| **08** | JavaScript → .NET: payload with an invalid property type produces a type error | Pass | [Invalid type error](https://github.com/vendasankarsf3945/BlazorUnionTypesJsInteropValidation/blob/main/Evidence/InvalidJson_NoMatchingUnionCase/Invalid-type.png) |
+| **09** | Ambiguous record-shaped payload without a classifier — must surface explicit ambiguity error (property-based) | Pass | [Property-based ambiguity](https://github.com/vendasankarsf3945/BlazorUnionTypesJsInteropValidation/blob/main/Evidence/AmbiguousUnion_MultipleMatches/Property-based-match-ambiguity.png) |
+| **10** | Completely invalid JSON structure is rejected before union selection | Pass | [Invalid JSON error](https://github.com/vendasankarsf3945/BlazorUnionTypesJsInteropValidation/blob/main/Evidence/InvalidJson_NoMatchingUnionCase/Invalid-json.png) |
+| **11** | Multiple union cases match (no classifier) — named ambiguity error observed | Pass | [Multiple matching cases](https://github.com/vendasankarsf3945/BlazorUnionTypesJsInteropValidation/blob/main/Evidence/AmbiguousUnion_MultipleMatches/Match-multiple%20cases.png) |
+| **12** | Multiple record shapes match during deserialization demonstrating ambiguity | Pass | [Property-based ambiguity](https://github.com/vendasankarsf3945/BlazorUnionTypesJsInteropValidation/blob/main/Evidence/AmbiguousUnion_MultipleMatches/Property-based-match-ambiguity.png) |
+| **13** | First record type (no classifier) — property-based discrimination demonstrates ambiguous matching | Pass | [Property-based discrimination](https://github.com/vendasankarsf3945/BlazorUnionTypesJsInteropValidation/blob/main/Evidence/AmbiguousUnion_MultipleMatches/Property-based-match-ambiguity.png) |
+| **14** | Second record type (no classifier) — property-based discrimination demonstrates ambiguous matching | Pass | [Property-based discrimination](Evidence/AmbiguousUnion_MultipleMatches/Property-based-match-ambiguity.png) |
+| **15** | Classifier-backed record union (`[JsonUnion(TypeClassifier=...)]`) — first classifier-resolved case (JS→C#) | Pass | [Classifier resolution](https://github.com/vendasankarsf3945/BlazorUnionTypesJsInteropValidation/blob/main/Evidence/RecordUnion_WithJsonUnion/Classifier-resolution.png) |
+| **16** | Classifier-backed record union (`[JsonUnion(TypeClassifier=...)]`) — second classifier-resolved case (JS→C#) | Pass | [Unambiguous via classifier](https://github.com/vendasankarsf3945/BlazorUnionTypesJsInteropValidation/blob/main/Evidence/RecordUnion_WithJsonUnion/Unambiguous-via-classifier.png) |
+| **17** | Classifier-backed record union — Round-trip when JavaScript supplies `$type` discriminator | Pass | [Using $type classifier](https://github.com/vendasankarsf3945/BlazorUnionTypesJsInteropValidation/blob/main/Evidence/RecordUnion_WithJsonUnion/Using-$type-classifier.png) |
+| **18** | C# → JS: integer union case sent as raw JSON number (no wrapper object) | Pass | [Integer case](https://github.com/vendasankarsf3945/BlazorUnionTypesJsInteropValidation/blob/main/Evidence/IntCase_DotNetToJavaScript.png) |
+| **19** | C# → JS: string union case sent as raw JSON string (no wrapper object) | Pass | [String case](https://github.com/vendasankarsf3945/BlazorUnionTypesJsInteropValidation/blob/main/Evidence/StringCase_DotNetToJavaScript.png) |
+| **20** | ApiResponse `SuccessResponse` transmitted as case properties (no wrapper object) | Pass | [Success response](https://github.com/vendasankarsf3945/BlazorUnionTypesJsInteropValidation/blob/main/Evidence/RecordCase_NoWrapperObject/ApiResponse_Success_case.png) |
+| **21** | ApiResponse `FailureResponse` transmitted as case properties (no wrapper object) | Pass | [Failure response](https://github.com/vendasankarsf3945/BlazorUnionTypesJsInteropValidation/blob/main/Evidence/RecordCase_NoWrapperObject/ApiResponse_Failure_case.png) |
+| **22** | ApiResponse `RedirectResponse` transmitted as case properties (no wrapper object) | Pass | [Redirect response](https://github.com/vendasankarsf3945/BlazorUnionTypesJsInteropValidation/blob/main/Evidence/RecordCase_NoWrapperObject/ApiResponse_Redirect_case.png) |
+| **23** | `ApiResponse` multi-case record behavior — C#→JS sends case properties without wrapper; JS→C# round-trip into correct active case | Pass | [Multi-case round-trip](https://github.com/vendasankarsf3945/BlazorUnionTypesJsInteropValidation/blob/main/Evidence/JavaScriptToDotNet_RoundTrip/Multi-case%20round-trip.png) |
+| **24** | JS → .NET: `NullableUnion` null active case preserved on deserialization | Pass | [Null round-trip](https://github.com/vendasankarsf3945/BlazorUnionTypesJsInteropValidation/blob/main/Evidence/NullActiveCase_RoundTrip/Null-case-round-trip.png) |
+| **25** | JS invokes .NET: `TaggedResult` deserializes the `TaggedSuccess` or `TaggedError` depending on classifier | Pass | [Ambiguous union](https://github.com/vendasankarsf3945/BlazorUnionTypesJsInteropValidation/blob/main/Evidence/JSInvokesDotNet_UnionParameter/JS-invokes-C%23-with-ambiguous-union.png) |
+| **26** | JS invokes .NET: `PropertyBased` union throws expected ambiguity error when cases overlap | Pass | [Property-based union](https://github.com/vendasankarsf3945/BlazorUnionTypesJsInteropValidation/blob/main/Evidence/JSInvokesDotNet_UnionParameter/JS-invokes-C%23-with-no-classified-union.png) |
+| **27** | JS invokes .NET: `TypeBased` union deserializes cases according to `$type` discriminator supplied by JavaScript | Pass | [Type-based union](https://github.com/vendasankarsf3945/BlazorUnionTypesJsInteropValidation/blob/main/Evidence/JSInvokesDotNet_UnionParameter/JS-invokes-C%23-with-type-based-union.png) |
+| **28** | JS invokes .NET: `PaymentResult` deserializes `PaymentApproved` from a complex record payload | Pass | [Complex multi-case union](https://github.com/vendasankarsf3945/BlazorUnionTypesJsInteropValidation/blob/main/Evidence/JSInvokesDotNet_UnionParameter/JS-invokes-C%23-with-complex-union.png) |
+| **29** | JS invokes .NET: generic `Result<string>` deserializes `Ok<string>` payload correctly (JS→C#) | Pass | [Generic result Ok string](https://github.com/vendasankarsf3945/BlazorUnionTypesJsInteropValidation/blob/main/Evidence/JSInvokesDotNet_UnionParameter/JS-invokes-C%23-with-generic-result-ok-string.png) |
+| **30** | JS invokes .NET: generic `Result<int>` deserializes `Ok<int>` payload correctly (JS→C#) | Pass | [Generic result Ok int](https://github.com/vendasankarsf3945/BlazorUnionTypesJsInteropValidation/blob/main/Evidence/JSInvokesDotNet_UnionParameter/JS-invokes-C%23-with-generic-result-ok-int.png) |
+| **31** | JS invokes .NET: `IntResult` deserializes `IntSuccess` value-type payload correctly | Pass | [IntResult value type](https://github.com/vendasankarsf3945/BlazorUnionTypesJsInteropValidation/blob/main/Evidence/JSInvokesDotNet_UnionParameter/JS-invokes-C%23-with-IntResult-value-type.png) |
+| **32** | JS invokes .NET: `StringResult` deserializes `StringSuccess` reference-type payload correctly | Pass | [StringResult reference type](https://github.com/vendasankarsf3945/BlazorUnionTypesJsInteropValidation/blob/main/Evidence/JSInvokesDotNet_UnionParameter/JS-invokes-C%23-with-StringResult-reference-type.png) |
+| **33** | JS → C#: union-level `[JsonUnion(TypeClassifier=...)]` resolves same-shape record deserialization correctly (must-hold) | Pass | [Classifier resolution](https://github.com/vendasankarsf3945/BlazorUnionTypesJsInteropValidation/blob/main/Evidence/RecordUnion_WithJsonUnion/Classifier-resolution.png) |
+| **34** | C# → JS: Preview behavior — `$type` discriminator is not emitted; only active-case JSON crosses the boundary | Pass | [String case](https://github.com/vendasankarsf3945/BlazorUnionTypesJsInteropValidation/blob/main/Evidence/StringCase_DotNetToJavaScript.png) |
+| **35** | JS → C#: JavaScript may add `$type` to aid classifier-based deserialization on the .NET side | Pass | [Using $type classifier](https://github.com/vendasankarsf3945/BlazorUnionTypesJsInteropValidation/blob/main/Evidence/RecordUnion_WithJsonUnion/Using-$type-classifier.png) |
+| **36** | JS → .NET: `PropertyBased(PBSuccess, PBError)` without a classifier produces ambiguity error | Pass | [Multiple matching cases](https://github.com/vendasankarsf3945/BlazorUnionTypesJsInteropValidation/blob/main/Evidence/AmbiguousUnion_MultipleMatches/Match-multiple%20cases.png) |
+| **37** | JS invokes .NET and receives a union return value — JS→C#→JS round-trip for a union parameter and return | Pass | [Multi-case round-trip](https://github.com/vendasankarsf3945/BlazorUnionTypesJsInteropValidation/blob/main/Evidence/JavaScriptToDotNet_RoundTrip/Multi-case%20round-trip.png) |
+
+## Test Coverage and Required Builds
+
+All validation scenarios in this report were exercised on the three deployment models in this workspace:
+
+- `UnionInteropValidation.Server` — Blazor Server (Debug/Release)
+- `UnionInteropValidation.Standalone` — Standalone WebAssembly (Debug/Release/AOT)
+- `UnionInteropValidation.Hosted` — Hosted WebAssembly (Debug/Release/AOT)
+
+
+## Release Publish
+
+Command:
+
+```bash
+dotnet publish -c Release
+```
+
+Output:
+
+Build succeeded.
+Published to:
+bin\Release\net11.0\publish\
+
+## AOT Publish
+
+Command:
+
+```bash
+dotnet publish -c Release -p:RunAOTCompilation=true
+```
+
+Notes:
+
+- WASM AOT builds were produced for Standalone and Hosted projects during validation.
 
 ---
-
-## Issues
-
-Based on testing across all three deployment platforms, the following issues were identified.
-
-### Issue 1: $type Classifier Field Undefined in Type-Based Discrimination
-
-**What happened:** When clicking the "TBSuccess" and "TBError" buttons on the TypeDiscrimination page (TC 15/23 and TC 16/24 - Type-Based Discrimination with $type classifier), the application returns an error:
-```
-"error": "Unknown $type: \u0022undefined\u0022"
-```
-
-**Expected behavior:** The $type field should contain the actual type name (e.g., "TaggedSuccess" or "TaggedError") so C# can deserialize to the correct union case.
-
-**Steps to reproduce:**
-1. Navigate to the "Type Discrimination Methods" page on Server or Hosted WebAssembly platforms
-2. Click either "TBSuccess("OK")" or "TBError("FAILED")" button in the Type-Based Discrimination section
-3. Observe the error message in the Result area: "Unknown $type: undefined"
-
-**Evidence:** 
-- Screenshot: [$type classifier field undefined error](Evidence/Errors/type-Classifier-Field-Undefined.png)
-- Error message shows: `"error": "Unknown $type: \u0022undefined\u0022"`
-- Code inspection shows: `const typeField = unionData.$type;` evaluating to `undefined`
-- Property-Based discrimination (TC 13-14) works correctly, confirming issue is specific to `$type` classifier handling
-
----
-
-### Issue 2: jsObjectReference Null Exception in Standalone WebAssembly Only
-
-**What happened:** When clicking any test button on multiple pages (NullableUnion, GenericResult) in **Standalone WebAssembly only**, the application throws:
-```
-ArgumentNull_Generic Arg_ParamName_Name, jsObjectReference
-```
-
-**Expected behavior:** JavaScript interop calls should successfully pass object references to C# without null reference exceptions. The same test buttons work correctly on Server deployment.
-
-**Steps to reproduce (Standalone WebAssembly only):**
-1. Deploy UnionInteropValidation.Standalone (Standalone WebAssembly) and navigate to any interactive page (NullableUnion, GenericResult)
-2. Click any C# → JavaScript button (e.g., "Result<string> - Ok("Success")", "WithValue("Test", 42)", "TBSuccess("OK")", etc.)
-3. OR click any JavaScript → C# button (e.g., "Call C# with Result<string> from JS", "Call C# with WithValue from JS", etc.)
-4. Observe the error message in the Result area
-
-**Evidence:** 
-- Screenshot: [jsObjectReference null exception in Standalone WebAssembly](Evidence/Errors/JavaScript-Object-Reference-Null.png)
-- Error message: "ArgumentNull_Generic Arg_ParamName_Name, jsObjectReference"
-- Screenshots show error on NullableUnion and GenericResult pages in Standalone WebAssembly only
-- Server deployment (UnionInteropValidation.Server) works correctly without any errors
-- All test scenarios work in Server deployment but fail in Standalone WebAssembly

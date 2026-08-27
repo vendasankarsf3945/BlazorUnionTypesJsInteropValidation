@@ -93,8 +93,8 @@
         try
         {
             ClearMessages();
-            var response = new SuccessResponse(200, "Operation successful", DateTime.UtcNow);
-            dynamic jsResult = await module!.InvokeAsync<dynamic>("processApiResponse", response);
+            ApiResponse union = new SuccessResponse(200, "Operation successful", DateTime.UtcNow);
+            dynamic jsResult = await module!.InvokeAsync<dynamic>("processApiResponse", union);
             result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
         }
         catch (Exception ex)
@@ -108,8 +108,8 @@
         try
         {
             ClearMessages();
-            var response = new FailureResponse(500, "Internal server error", "ERR_INTERNAL");
-            dynamic jsResult = await module!.InvokeAsync<dynamic>("processApiResponse", response);
+            ApiResponse union = new FailureResponse(500, "Internal server error", "ERR_INTERNAL");
+            dynamic jsResult = await module!.InvokeAsync<dynamic>("processApiResponse", union);
             result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
         }
         catch (Exception ex)
@@ -123,8 +123,8 @@
         try
         {
             ClearMessages();
-            var response = new RedirectResponse("https://example.com/new-location", 302);
-            dynamic jsResult = await module!.InvokeAsync<dynamic>("processApiResponse", response);
+            ApiResponse union = new RedirectResponse("https://example.com/new-location", 302);
+            dynamic jsResult = await module!.InvokeAsync<dynamic>("processApiResponse", union);
             result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
         }
         catch (Exception ex)
@@ -148,26 +148,7 @@
     }
 
     [JSInvokable]
-    public static object HandleApiResponseFromJS(System.Text.Json.JsonElement json)
-    {
-        var opts = new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-        ApiResponse apiResponse;
-        if (json.TryGetProperty("url", out _))
-            apiResponse = System.Text.Json.JsonSerializer.Deserialize<RedirectResponse>(json, opts)!;
-        else if (json.TryGetProperty("errorMessage", out _))
-            apiResponse = System.Text.Json.JsonSerializer.Deserialize<FailureResponse>(json, opts)!;
-        else
-            apiResponse = System.Text.Json.JsonSerializer.Deserialize<SuccessResponse>(json, opts)!;
-        var activeCase = apiResponse.Value?.GetType().Name ?? "null";
-        var description = apiResponse.Value switch
-        {
-            SuccessResponse s => $"SuccessResponse: statusCode={s.StatusCode}, data=\"{s.Data}\"",
-            FailureResponse f => $"FailureResponse: statusCode={f.StatusCode}, errorCode=\"{f.ErrorCode}\"",
-            RedirectResponse r => $"RedirectResponse: url=\"{r.Url}\", redirectCode={r.RedirectCode}",
-            _ => "null active case"
-        };
-        return new { status = "received from JS", activeCase, description };
-    }
+    public static ApiResponse HandleApiResponseFromJS(ApiResponse response) => response;
 
     private void ClearMessages()
     {

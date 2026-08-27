@@ -4,7 +4,7 @@
  */
 
 export function processPayment(payment) {
-    console.log("JS received payment result:", payment);
+    console.log("JS received PaymentResult active case:", JSON.stringify(payment));
     
     if (payment.transactionId !== undefined) {
         return {
@@ -36,17 +36,14 @@ export function processPayment(payment) {
 }
 
 export async function callCSharpWithPayment() {
-    console.log("JS calling C# method with PaymentResult");
+    const payload = { transactionId: "TXN-JS-001", amount: 99.99, approvedAt: new Date().toISOString() };
+    console.log("JS → C# HandlePaymentFromJS:", JSON.stringify(payload));
     try {
-        const result = await DotNet.invokeMethodAsync("UnionInteropValidation.Standalone", "HandlePaymentFromJS", { 
-            transactionId: "TXN-JS-001",
-            amount: 99.99,
-            approvedAt: new Date().toISOString()
-        });
-        console.log("C# response:", result);
-        return result;
+        const returned = await DotNet.invokeMethodAsync("UnionInteropValidation.Standalone", "HandlePaymentFromJS", payload);
+        console.log("C# → JS returned PaymentResult:", JSON.stringify(returned));
+        return { sent: payload, received: returned };
     } catch (error) {
-        console.error("Error calling C# method:", error);
+        console.error("Error:", error);
         return { error: error.message };
     }
 }

@@ -45,7 +45,10 @@
                                     Classifier resolves second record case
                                 </button>
                                 <button class="btn btn-info btn-sm" @onclick="CallCSharpWithAmbiguous">
-                                    Classifier takes precedence over ambiguity
+                                    JS → .NET (ambiguous SimpleResult, no $type)
+                                </button>
+                                <button class="btn btn-primary btn-sm" @onclick="CallCSharpWithTagged">
+                                    JS → .NET (tagged TaggedResult, with $type)
                                 </button>
                             </div>
                         </div>
@@ -98,8 +101,8 @@
         try
         {
             ClearMessages();
-            var unionData = new SimpleSuccess("Operation succeeded");
-            dynamic jsResult = await module!.InvokeAsync<dynamic>("processAmbiguous", unionData);
+            SimpleResult union = new SimpleSuccess("Operation succeeded");
+            dynamic jsResult = await module!.InvokeAsync<dynamic>("processAmbiguous", union);
             result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
         }
         catch (Exception ex)
@@ -113,8 +116,8 @@
         try
         {
             ClearMessages();
-            var unionData = new SimpleError("Operation failed");
-            dynamic jsResult = await module!.InvokeAsync<dynamic>("processAmbiguous", unionData);
+            SimpleResult union = new SimpleError("Operation failed");
+            dynamic jsResult = await module!.InvokeAsync<dynamic>("processAmbiguous", union);
             result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
         }
         catch (Exception ex)
@@ -128,8 +131,8 @@
         try
         {
             ClearMessages();
-            var unionData = new TaggedSuccess("Operation succeeded");
-            dynamic jsResult = await module!.InvokeAsync<dynamic>("processTagged", unionData);
+            TaggedResult union = new TaggedSuccess("Operation succeeded");
+            dynamic jsResult = await module!.InvokeAsync<dynamic>("processTagged", union);
             result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
         }
         catch (Exception ex)
@@ -143,8 +146,8 @@
         try
         {
             ClearMessages();
-            var unionData = new TaggedError("Operation failed");
-            dynamic jsResult = await module!.InvokeAsync<dynamic>("processTagged", unionData);
+            TaggedResult union = new TaggedError("Operation failed");
+            dynamic jsResult = await module!.InvokeAsync<dynamic>("processTagged", union);
             result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
         }
         catch (Exception ex)
@@ -167,20 +170,39 @@
         }
     }
 
-    [JSInvokable]
-    public static object HandleAmbiguousFromJS(System.Text.Json.JsonElement json)
+    private async Task CallCSharpWithTagged()
     {
-        var opts = new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-        // TaggedSuccess and TaggedError share the same JSON shape; first case wins
-        TaggedResult union = System.Text.Json.JsonSerializer.Deserialize<TaggedSuccess>(json, opts)!;
-        var activeCase = union.Value?.GetType().Name ?? "null";
-        var description = union.Value switch
+        try
         {
-            TaggedSuccess s => $"TaggedSuccess: \"{s.Value}\"",
-            TaggedError e => $"TaggedError: \"{e.Value}\"",
-            _ => "null active case"
-        };
-        return new { status = "received from JS", activeCase, description };
+            ClearMessages();
+            dynamic jsResult = await module!.InvokeAsync<dynamic>("callCSharpWithTagged");
+            result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+        }
+        catch (Exception ex)
+        {
+            errorMsg = ex.Message;
+        }
+    }
+
+    [JSInvokable]
+    public static object HandleSimpleFromJS(System.Text.Json.JsonElement json)
+    {
+        try
+        {
+            var opts = new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            var union = System.Text.Json.JsonSerializer.Deserialize<SimpleResult>(json, opts);
+            return new { status = "deserialized", resolved = union.ToString(), note = "Ambiguous: both cases have same shape" };
+        }
+        catch (Exception ex)
+        {
+            return new { status = "error", error = ex.Message, note = "Ambiguous deserialization failed" };
+        }
+    }
+
+    [JSInvokable]
+    public static TaggedResult HandleTaggedFromJS(TaggedResult union)
+    {
+        return union;
     }
 
     private void ClearMessages()

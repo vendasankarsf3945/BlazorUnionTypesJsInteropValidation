@@ -4,7 +4,7 @@
  */
 
 export function processValueType(result) {
-    console.log("JS received value type result:", result);
+    console.log("JS received IntResult active case:", JSON.stringify(result));
     
     if (result.value !== undefined && typeof result.value === "number") {
         return {
@@ -26,7 +26,7 @@ export function processValueType(result) {
 }
 
 export function processReferenceType(result) {
-    console.log("JS received reference type result:", result);
+    console.log("JS received StringResult active case:", JSON.stringify(result));
     
     if (result.content !== undefined) {
         return {
@@ -45,25 +45,27 @@ export function processReferenceType(result) {
 }
 
 export async function callCSharpWithValueType() {
-    console.log("JS calling C# method with value type");
+    const payload = { value: 777 };
+    console.log("JS → C# HandleValueTypeFromJS (IntSuccess):", JSON.stringify(payload));
     try {
-        const result = await DotNet.invokeMethodAsync("UnionInteropValidation.Standalone", "HandleValueTypeFromJS", { value: 777 });
-        console.log("C# response:", result);
-        return result;
+        const returned = await DotNet.invokeMethodAsync("UnionInteropValidation.Standalone", "HandleValueTypeFromJS", payload);
+        console.log("C# → JS returned IntResult:", JSON.stringify(returned));
+        return { sent: payload, received: returned };
     } catch (error) {
-        console.error("Error calling C# method:", error);
+        console.error("Error:", error);
         return { error: error.message };
     }
 }
 
 export async function callCSharpWithReferenceType() {
-    console.log("JS calling C# method with reference type");
+    const payload = { content: "from JS", metadata: "test" };
+    console.log("JS → C# HandleReferenceTypeFromJS (StringSuccess):", JSON.stringify(payload));
     try {
-        const result = await DotNet.invokeMethodAsync("UnionInteropValidation.Standalone", "HandleReferenceTypeFromJS", { content: "from JS", metadata: "test" });
-        console.log("C# response:", result);
-        return result;
+        const returned = await DotNet.invokeMethodAsync("UnionInteropValidation.Standalone", "HandleReferenceTypeFromJS", payload);
+        console.log("C# → JS returned StringResult:", JSON.stringify(returned));
+        return { sent: payload, received: returned };
     } catch (error) {
-        console.error("Error calling C# method:", error);
+        console.error("Error:", error);
         return { error: error.message };
     }
 }

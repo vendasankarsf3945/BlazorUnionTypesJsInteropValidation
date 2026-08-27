@@ -1,0 +1,97 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v11.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v11.0": {
+      "UnionInteropValidation.Hosted/1.0.0": {
+        "dependencies": {
+          "Microsoft.AspNetCore.Components.WebAssembly.Server": "11.0.0-preview.7.26381.103",
+          "UnionInteropValidation.Hosted.Client": "1.0.0"
+        },
+        "runtime": {
+          "UnionInteropValidation.Hosted.dll": {}
+        }
+      },
+      "Microsoft.AspNetCore.Components.WebAssembly/11.0.0-preview.7.26381.103": {
+        "dependencies": {
+          "Microsoft.JSInterop.WebAssembly": "11.0.0-preview.7.26381.103"
+        },
+        "runtime": {
+          "lib/net11.0/Microsoft.AspNetCore.Components.WebAssembly.dll": {
+            "assemblyVersion": "11.0.0.0",
+            "fileVersion": "11.0.26.38203",
+            "localPath": "Microsoft.AspNetCore.Components.WebAssembly.dll"
+          }
+        }
+      },
+      "Microsoft.AspNetCore.Components.WebAssembly.Server/11.0.0-preview.7.26381.103": {
+        "dependencies": {
+          "Microsoft.AspNetCore.Components.WebAssembly": "11.0.0-preview.7.26381.103"
+        },
+        "runtime": {
+          "lib/net11.0/Microsoft.AspNetCore.Components.WebAssembly.Server.dll": {
+            "assemblyVersion": "11.0.0.0",
+            "fileVersion": "11.0.26.38203",
+            "localPath": "Microsoft.AspNetCore.Components.WebAssembly.Server.dll"
+          }
+        }
+      },
+      "Microsoft.JSInterop.WebAssembly/11.0.0-preview.7.26381.103": {
+        "runtime": {
+          "lib/net11.0/Microsoft.JSInterop.WebAssembly.dll": {
+            "assemblyVersion": "11.0.0.0",
+            "fileVersion": "11.0.26.38203",
+            "localPath": "Microsoft.JSInterop.WebAssembly.dll"
+          }
+        }
+      },
+      "UnionInteropValidation.Hosted.Client/1.0.0": {
+        "dependencies": {
+          "Microsoft.AspNetCore.Components.WebAssembly": "11.0.0-preview.7.26381.103"
+        },
+        "runtime": {
+          "UnionInteropValidation.Hosted.Client.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      }
+    }
+  },
+  "libraries": {
+    "UnionInteropValidation.Hosted/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Microsoft.AspNetCore.Components.WebAssembly/11.0.0-preview.7.26381.103": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-olovpXNd7TOPQuaycQ9iElVEukZXGgnZm+NZ5OXfCmnVJ4RSAY8QvPyy9/XoZiA8Zu6aliBjpkm5b3E2RXZBMw==",
+      "path": "microsoft.aspnetcore.components.webassembly/11.0.0-preview.7.26381.103",
+      "hashPath": "microsoft.aspnetcore.components.webassembly.11.0.0-preview.7.26381.103.nupkg.sha512"
+    },
+    "Microsoft.AspNetCore.Components.WebAssembly.Server/11.0.0-preview.7.26381.103": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-DzDNePURHszFjBwqCihJgCLegTXyMpc2gHsUiCv7L5iJ/veEip1/h3I8x5TiHQDu1vCvxSiu2VxIkGznzvGqxw==",
+      "path": "microsoft.aspnetcore.components.webassembly.server/11.0.0-preview.7.26381.103",
+      "hashPath": "microsoft.aspnetcore.components.webassembly.server.11.0.0-preview.7.26381.103.nupkg.sha512"
+    },
+    "Microsoft.JSInterop.WebAssembly/11.0.0-preview.7.26381.103": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-3d9Lfevm0wsojvZey7OhjiflrZsxhu+DTAM46zYVQ+cxkbLGk6ERyQtYknDkfThS9ixpVvrouIMRvYq7s8cvjA==",
+      "path": "microsoft.jsinterop.webassembly/11.0.0-preview.7.26381.103",
+      "hashPath": "microsoft.jsinterop.webassembly.11.0.0-preview.7.26381.103.nupkg.sha512"
+    },
+    "UnionInteropValidation.Hosted.Client/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}

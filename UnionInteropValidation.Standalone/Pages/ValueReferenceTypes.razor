@@ -118,8 +118,8 @@
         try
         {
             ClearMessages();
-            var unionData = new IntSuccess(123);
-            dynamic jsResult = await module!.InvokeAsync<dynamic>("processValueType", unionData);
+            IntResult union = new IntSuccess(123);
+            dynamic jsResult = await module!.InvokeAsync<dynamic>("processValueType", union);
             result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
         }
         catch (Exception ex)
@@ -133,8 +133,8 @@
         try
         {
             ClearMessages();
-            var unionData = new IntError("Operation failed");
-            dynamic jsResult = await module!.InvokeAsync<dynamic>("processValueType", unionData);
+            IntResult union = new IntError("Operation failed");
+            dynamic jsResult = await module!.InvokeAsync<dynamic>("processValueType", union);
             result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
         }
         catch (Exception ex)
@@ -148,8 +148,8 @@
         try
         {
             ClearMessages();
-            var unionData = new StringSuccess("Hello World", "greeting");
-            dynamic jsResult = await module!.InvokeAsync<dynamic>("processReferenceType", unionData);
+            StringResult union = new StringSuccess("Hello World", "greeting");
+            dynamic jsResult = await module!.InvokeAsync<dynamic>("processReferenceType", union);
             result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
         }
         catch (Exception ex)
@@ -163,8 +163,8 @@
         try
         {
             ClearMessages();
-            var unionData = new StringEmpty();
-            dynamic jsResult = await module!.InvokeAsync<dynamic>("processReferenceType", unionData);
+            StringResult union = new StringEmpty();
+            dynamic jsResult = await module!.InvokeAsync<dynamic>("processReferenceType", union);
             result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
         }
         catch (Exception ex)
@@ -202,42 +202,10 @@
     }
 
     [JSInvokable]
-    public static object HandleValueTypeFromJS(System.Text.Json.JsonElement json)
-    {
-        var opts = new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-        IntResult valueType;
-        if (json.TryGetProperty("value", out _))
-            valueType = System.Text.Json.JsonSerializer.Deserialize<IntSuccess>(json, opts)!;
-        else
-            valueType = System.Text.Json.JsonSerializer.Deserialize<IntError>(json, opts)!;
-        var activeCase = valueType.Value?.GetType().Name ?? "null";
-        var description = valueType.Value switch
-        {
-            IntSuccess s => $"IntSuccess: value={s.Value}",
-            IntError e => $"IntError: message=\"{e.Message}\"",
-            _ => "null active case"
-        };
-        return new { status = "received from JS", activeCase, description };
-    }
+    public static IntResult HandleValueTypeFromJS(IntResult valueType) => valueType;
 
     [JSInvokable]
-    public static object HandleReferenceTypeFromJS(System.Text.Json.JsonElement json)
-    {
-        var opts = new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-        StringResult referenceType;
-        if (json.TryGetProperty("content", out _))
-            referenceType = System.Text.Json.JsonSerializer.Deserialize<StringSuccess>(json, opts)!;
-        else
-            referenceType = new StringEmpty();
-        var activeCase = referenceType.Value?.GetType().Name ?? "null";
-        var description = referenceType.Value switch
-        {
-            StringSuccess s => $"StringSuccess: content=\"{s.Content}\", metadata=\"{s.Metadata}\"",
-            StringEmpty => "StringEmpty",
-            _ => "null active case"
-        };
-        return new { status = "received from JS", activeCase, description };
-    }
+    public static StringResult HandleReferenceTypeFromJS(StringResult referenceType) => referenceType;
 
     private void ClearMessages()
     {
