@@ -79,8 +79,17 @@
     private string errorMsg = string.Empty;
     private IJSObjectReference? module;
 
-    private async Task<IJSObjectReference> GetModuleAsync() =>
-        module ??= await JS.InvokeAsync<IJSObjectReference>("import", "./js/generic-result.js");
+    private async Task<IJSObjectReference> GetModuleAsync()
+    {
+        try
+        {
+            return module ??= await JS.InvokeAsync<IJSObjectReference>("import", "./js/generic-result.js");
+        }
+        catch (JSException ex)
+        {
+            throw new InvalidOperationException("Unable to load the generic-result JavaScript module.", ex);
+        }
+    }
 
 
     private async Task SendOkString()

@@ -1,8 +1,6 @@
 @page "/nested-union"
 @inject IJSRuntime JS
 
-@using UnionInteropValidation.Server.Models
-
 <PageTitle>Nested Union in Container</PageTitle>
 
 <div class="container mt-5">
@@ -83,8 +81,17 @@
     private string errorMsg = string.Empty;
     private IJSObjectReference? module;
 
-    private async Task<IJSObjectReference> GetModuleAsync() =>
-        module ??= await JS.InvokeAsync<IJSObjectReference>("import", "./js/nested-union.js");
+    private async Task<IJSObjectReference> GetModuleAsync()
+    {
+        try
+        {
+            return module ??= await JS.InvokeAsync<IJSObjectReference>("import", "./js/nested-union.js");
+        }
+        catch (JSException ex)
+        {
+            throw new InvalidOperationException("Unable to load the nested-union JavaScript module.", ex);
+        }
+    }
 
     private async Task SendUserData()
     {

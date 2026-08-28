@@ -3,14 +3,14 @@
 
 
 /**
- * Tests deserialization of empty JSON to SimpleResult union
+ * Tests required-member validation after ApiResponse case selection
  */
 export async function testMissingProperty(data) {
     try {
         const jsonString = JSON.stringify(data || {});
         const result = await window.DotNet.invokeMethodAsync(
             'UnionInteropValidation.Hosted.Client',
-            'TryDeserializeToSimpleResult',
+            'TryDeserializeToApiResponse',
             jsonString
         );
         const parsed = JSON.parse(result);
@@ -24,14 +24,14 @@ export async function testMissingProperty(data) {
 }
 
 /**
- * Tests deserialization with wrong type to SimpleResult union
+ * Tests invalid property type after ApiResponse case selection
  */
 export async function testInvalidType(data) {
     try {
         const jsonString = JSON.stringify(data || { value: 12345 });
         const result = await window.DotNet.invokeMethodAsync(
             'UnionInteropValidation.Hosted.Client',
-            'TryDeserializeToSimpleResult',
+            'TryDeserializeToApiResponse',
             jsonString
         );
         const parsed = JSON.parse(result);
@@ -66,14 +66,14 @@ export async function testAmbiguousNoClassifier(data) {
 }
 
 /**
- * Tests deserialization with random fields to SimpleResult union
+ * Tests ApiResponse classifier rejection of an unknown shape
  */
 export async function testCompletelyInvalid(data) {
     try {
         const jsonString = JSON.stringify(data || { randomField: "invalid", anotherField: 123 });
         const result = await window.DotNet.invokeMethodAsync(
             'UnionInteropValidation.Hosted.Client',
-            'TryDeserializeToSimpleResult',
+            'TryDeserializeToApiResponse',
             jsonString
         );
         const parsed = JSON.parse(result);
@@ -87,14 +87,14 @@ export async function testCompletelyInvalid(data) {
 }
 
 /**
- * Tests deserialization to UnionResult (complex type requiring specific fields)
+ * Tests required fields on a selected ApiResponse case
  */
 export async function testFieldValidation(data) {
     try {
         const jsonString = JSON.stringify(data || {});
         const result = await window.DotNet.invokeMethodAsync(
             'UnionInteropValidation.Hosted.Client',
-            'TryDeserializeToUnionResult',
+            'TryDeserializeToApiResponse',
             jsonString
         );
         const parsed = JSON.parse(result);
@@ -108,14 +108,14 @@ export async function testFieldValidation(data) {
 }
 
 /**
- * Tests deserialization with wrong types to UnionResult
+ * Tests wrong property types on a selected ApiResponse case
  */
 export async function testTypeMismatch(data) {
     try {
         const jsonString = JSON.stringify(data || { message: 12345, code: "wrong" });
         const result = await window.DotNet.invokeMethodAsync(
             'UnionInteropValidation.Hosted.Client',
-            'TryDeserializeToUnionResult',
+            'TryDeserializeToApiResponse',
             jsonString
         );
         const parsed = JSON.parse(result);
@@ -129,14 +129,14 @@ export async function testTypeMismatch(data) {
 }
 
 /**
- * Tests deserialization with completely unknown structure to UnionResult
+ * Tests deserialization with a completely unknown ApiResponse structure
  */
 export async function testNoMatchingCase(data) {
     try {
         const jsonString = JSON.stringify(data || { unknownField: "value", anotherUnknown: 123 });
         const result = await window.DotNet.invokeMethodAsync(
             'UnionInteropValidation.Hosted.Client',
-            'TryDeserializeToUnionResult',
+            'TryDeserializeToApiResponse',
             jsonString
         );
         const parsed = JSON.parse(result);
@@ -158,8 +158,7 @@ export async function testMalformedJson() {
         const result = await window.DotNet.invokeMethodAsync(
             'UnionInteropValidation.Hosted.Client',
             'ValidateJsonStructure',
-            malformedJson,
-            'SimpleResult'
+            malformedJson
         );
         const parsed = JSON.parse(result);
         if (!parsed.success) {

@@ -23,13 +23,13 @@
                                 <div class="col-md-6">
                                     <h6 class="mt-3">Missing Required Property</h6>
                                     <button class="btn btn-danger btn-sm" @onclick="MissingProperty">
-                                        Test: {} (Empty Object)
+                                        Test: {data: "partial success"} (Missing Required Members)
                                     </button>
                                 </div>
                                 <div class="col-md-6">
                                     <h6 class="mt-3">Invalid Type</h6>
                                     <button class="btn btn-danger btn-sm" @onclick="InvalidType">
-                                        Test: {value: 12345} (Wrong Type)
+                                        Test: {data: 12345} (Wrong Selected-Case Type)
                                     </button>
                                 </div>
                             </div>
@@ -37,7 +37,7 @@
                                 <div class="col-md-6">
                                     <h6>Ambiguous Without Classifier</h6>
                                     <button class="btn btn-danger btn-sm" @onclick="AmbiguousNoClassifier">
-                                        Test: {message: "x"} (Ambiguous)
+                                        Test: {value: "test"} (Ambiguous)
                                     </button>
                                 </div>
                                 <div class="col-md-6">
@@ -111,13 +111,6 @@
                 </div>
             }
 
-            @if (!string.IsNullOrEmpty(validationMsg))
-            {
-                <div class="alert alert-warning mt-4">
-                    <h6>Validation Message:</h6>
-                    <pre>@validationMsg</pre>
-                </div>
-            }
         </div>
     </div>
 </div>
@@ -125,7 +118,6 @@
 @code {
     private string result = string.Empty;
     private string errorMsg = string.Empty;
-    private string validationMsg = string.Empty;
     private IJSObjectReference? module;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -151,15 +143,13 @@
         try
         {
             ClearMessages();
-            // Send JSON missing required property
-            var invalidData = new { value = "" }; // Missing type indicator
+            var invalidData = new { data = "partial success" };
             var jsResult = await module!.InvokeAsync<dynamic>("testMissingProperty", invalidData);
             result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
         }
         catch (Exception ex)
         {
-            errorMsg = $"Missing Required Property Error:\n{ex.Message}\n\nThis error occurs when required fields are missing from the JSON structure.";
-            validationMsg = $"Expected fields not found. Cannot deserialize to any union case.";
+            errorMsg = ex.Message;
         }
     }
 
@@ -168,14 +158,13 @@
         try
         {
             ClearMessages();
-            var invalidData = new { value = 12345 }; // Wrong type (int instead of string)
+            var invalidData = new { statusCode = 200, data = 12345, timestamp = "2026-08-28T00:00:00Z" };
             var jsResult = await module!.InvokeAsync<dynamic>("testInvalidType", invalidData);
             result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
         }
         catch (Exception ex)
         {
-            errorMsg = $"Invalid Type Error:\n{ex.Message}\n\nJSON type doesn't match any union case type requirements.";
-            validationMsg = $"Type mismatch: Expected string or record, got integer.";
+            errorMsg = ex.Message;
         }
     }
 
@@ -184,14 +173,13 @@
         try
         {
             ClearMessages();
-            var ambiguousData = new { message = "test" }; // Could match multiple cases
+            var ambiguousData = new { value = "test" }; // Matches both SimpleResult cases
             var jsResult = await module!.InvokeAsync<dynamic>("testAmbiguousNoClassifier", ambiguousData);
             result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
         }
         catch (Exception ex)
         {
             errorMsg = $"Ambiguous Without Classifier Error:\n{ex.Message}\n\nJSON matches multiple union cases but no classifier ($type) to disambiguate.";
-            validationMsg = $"Ambiguous case match: Could deserialize to SimpleSuccess or SimpleError.\nUse [JsonUnion] classifier to resolve.";
         }
     }
 
@@ -207,7 +195,6 @@
         catch (Exception ex)
         {
             errorMsg = $"Completely Invalid JSON Error:\n{ex.Message}\n\nJSON structure doesn't match any union case pattern.";
-            validationMsg = $"No matching union case found. JSON structure is completely incompatible with all union types.";
         }
     }
 
@@ -218,14 +205,13 @@
         try
         {
             ClearMessages();
-            var invalidData = new { }; // Missing all fields
+            var invalidData = new { errorMessage = "partial failure" };
             var jsResult = await module!.InvokeAsync<dynamic>("testFieldValidation", invalidData);
             result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
         }
         catch (Exception ex)
         {
-            errorMsg = $"Missing Required Field Validation Error:\n{ex.Message}";
-            validationMsg = $"Validation Errors:\n  • Field 'message' is required\n  • Field 'message' cannot be null or empty";
+            errorMsg = ex.Message;
         }
     }
 
@@ -234,14 +220,13 @@
         try
         {
             ClearMessages();
-            var invalidData = new { message = 12345, code = "wrong" }; // Wrong types
+            var invalidData = new { statusCode = "wrong", errorMessage = 12345, errorCode = 99 };
             var jsResult = await module!.InvokeAsync<dynamic>("testTypeMismatch", invalidData);
             result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
         }
         catch (Exception ex)
         {
-            errorMsg = $"Type Mismatch Validation Error:\n{ex.Message}";
-            validationMsg = $"Type Validation Errors:\n  • Field 'message': Expected string, got number\n  • Field 'code': Expected number, got string";
+            errorMsg = ex.Message;
         }
     }
 
@@ -256,8 +241,7 @@
         }
         catch (Exception ex)
         {
-            errorMsg = $"No Matching Union Case Validation Error:\n{ex.Message}";
-            validationMsg = $"Deserialization Failed:\n  • No union case matched the provided JSON\n  • Tried matching against: Success, Error, Redirect\n  • All cases returned validation errors";
+            errorMsg = ex.Message;
         }
     }
 
@@ -272,8 +256,7 @@
         }
         catch (Exception ex)
         {
-            errorMsg = $"Malformed JSON Validation Error:\n{ex.Message}";
-            validationMsg = $"JSON Parse Error:\n  • Invalid JSON format\n  • Line 1, Column 5: Unexpected token\n  • Expected: '{{', got: 'undefined'";
+            errorMsg = ex.Message;
         }
     }
 
@@ -281,7 +264,6 @@
     {
         result = string.Empty;
         errorMsg = string.Empty;
-        validationMsg = string.Empty;
     }
 
     // C# Backend Methods for Union Deserialization Testing
@@ -312,7 +294,7 @@
     }
 
     [JSInvokable]
-    public static string TryDeserializeToUnionResult(string jsonString)
+    public static string TryDeserializeToApiResponse(string jsonString)
     {
         try
         {
@@ -321,7 +303,7 @@
                 PropertyNameCaseInsensitive = true,
                 WriteIndented = true
             };
-            var deserialized = System.Text.Json.JsonSerializer.Deserialize<UnionResult>(jsonString, options);
+            var deserialized = System.Text.Json.JsonSerializer.Deserialize<ApiResponse>(jsonString, options);
             return System.Text.Json.JsonSerializer.Serialize(new { success = true, data = deserialized }, options);
         }
         catch (Exception ex)
@@ -336,7 +318,7 @@
     }
 
     [JSInvokable]
-    public static string ValidateJsonStructure(string jsonString, string targetUnion)
+    public static string ValidateJsonStructure(string jsonString)
     {
         try
         {

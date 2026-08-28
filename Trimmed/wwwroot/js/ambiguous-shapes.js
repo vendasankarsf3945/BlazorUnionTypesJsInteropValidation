@@ -35,7 +35,11 @@ export async function callCSharpWithAmbiguous() {
 }
 
 export async function callCSharpWithTagged() {
-    const payload = { $type: "TaggedSuccess", value: "from JS (tagged)" };
+    return callCSharpWithTaggedCase("TaggedSuccess", "from JS (tagged success)");
+}
+
+export async function callCSharpWithTaggedCase(discriminator, value) {
+    const payload = { $type: discriminator, value };
     console.log("JS → C# HandleTaggedFromJS:", JSON.stringify(payload));
     try {
         const result = await DotNet.invokeMethodAsync(

@@ -36,7 +36,12 @@ export async function callCSharpWithPropertyBased() {
 }
 
 export async function callCSharpWithTypeBased() {
-    const payload = { $type: "TBSuccess", result: "success from JS (typed)" };
+    return callCSharpWithTypeBasedCase("TBSuccess");
+}
+
+export async function callCSharpWithTypeBasedCase(discriminator) {
+    const payload = { result: `${discriminator ?? "missing"} from JS` };
+    if (discriminator !== null) payload.$type = discriminator;
     console.log("JS → C# HandleTypeBasedFromJS:", JSON.stringify(payload));
     try {
         const result = await DotNet.invokeMethodAsync(

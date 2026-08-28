@@ -52,7 +52,7 @@ public sealed class NestedUnionClassifierFactory : JsonTypeClassifierFactory<Nes
                 else if (scan.TokenType is JsonTokenType.StartObject or JsonTokenType.StartArray)
                     scan.Skip();
             }
-            return typeof(UserData);
+            throw new JsonException("No NestedUnion case matched the JSON properties.");
         };
 }
 
@@ -62,7 +62,7 @@ public record class SimpleSuccess(string Value);
 public record class SimpleError(string Value);
 public union SimpleResult(SimpleSuccess, SimpleError);
 
-// Classifier always picks TaggedSuccess; both cases have the same JSON shape
+// The explicit $type discriminator resolves two cases with the same JSON shape.
 public record class TaggedSuccess(string Value);
 public record class TaggedError(string Value);
 
@@ -84,16 +84,18 @@ public sealed class TaggedResultClassifierFactory : JsonTypeClassifierFactory<Ta
                     {
                         scan.Read();
                         var t = scan.GetString();
-                        if (t != null && t.Contains("Error", StringComparison.OrdinalIgnoreCase))
+                        if (string.Equals(t, nameof(TaggedSuccess), StringComparison.OrdinalIgnoreCase))
+                            return typeof(TaggedSuccess);
+                        if (string.Equals(t, nameof(TaggedError), StringComparison.OrdinalIgnoreCase))
                             return typeof(TaggedError);
-                        return typeof(TaggedSuccess);
+                        throw new JsonException($"Unknown TaggedResult discriminator '{t ?? "<null>"}'.");
                     }
                     else scan.Skip();
                 }
                 else if (scan.TokenType is JsonTokenType.StartObject or JsonTokenType.StartArray)
                     scan.Skip();
             }
-            return typeof(TaggedSuccess);
+            throw new JsonException("TaggedResult requires a $type discriminator.");
         };
 }
 
@@ -109,9 +111,17 @@ public record class Error<T>(string Message);
 public union Result<T>(Ok<T>, Error<T>);
 
 // 7. MULTI-CASE UNION - Complex real-world scenario
-public record class SuccessResponse(int StatusCode, string Data, DateTime Timestamp);
-public record class FailureResponse(int StatusCode, string ErrorMessage, string ErrorCode);
-public record class RedirectResponse(string Url, int RedirectCode);
+public record class SuccessResponse(
+    [property: JsonRequired] int StatusCode,
+    [property: JsonRequired] string Data,
+    [property: JsonRequired] DateTime Timestamp);
+public record class FailureResponse(
+    [property: JsonRequired] int StatusCode,
+    [property: JsonRequired] string ErrorMessage,
+    [property: JsonRequired] string ErrorCode);
+public record class RedirectResponse(
+    [property: JsonRequired] string Url,
+    [property: JsonRequired] int RedirectCode);
 
 [JsonUnion(TypeClassifier = typeof(ApiResponseClassifierFactory))]
 public union ApiResponse(SuccessResponse, FailureResponse, RedirectResponse);
@@ -134,7 +144,7 @@ public sealed class ApiResponseClassifierFactory : JsonTypeClassifierFactory<Api
                 else if (scan.TokenType is JsonTokenType.StartObject or JsonTokenType.StartArray)
                     scan.Skip();
             }
-            return typeof(SuccessResponse);
+            throw new JsonException("No ApiResponse case matched the JSON properties.");
         };
 }
 
@@ -164,7 +174,7 @@ public sealed class PaymentResultClassifierFactory : JsonTypeClassifierFactory<P
                 else if (scan.TokenType is JsonTokenType.StartObject or JsonTokenType.StartArray)
                     scan.Skip();
             }
-            return typeof(PaymentApproved);
+            throw new JsonException("No PaymentResult case matched the JSON properties.");
         };
 }
 
@@ -190,7 +200,7 @@ public sealed class IntResultClassifierFactory : JsonTypeClassifierFactory<IntRe
                     if (string.Equals(name, "message", StringComparison.OrdinalIgnoreCase)) return typeof(IntError);
                 }
             }
-            return typeof(IntSuccess);
+            throw new JsonException("No IntResult case matched the JSON properties.");
         };
 }
 
@@ -207,15 +217,18 @@ public sealed class StringResultClassifierFactory : JsonTypeClassifierFactory<St
         static (ref Utf8JsonReader reader) =>
         {
             var scan = reader;
+            var hasProperty = false;
             while (scan.Read() && scan.TokenType != JsonTokenType.EndObject)
             {
                 if (scan.TokenType == JsonTokenType.PropertyName)
                 {
+                    hasProperty = true;
                     var name = scan.GetString();
                     if (string.Equals(name, "content", StringComparison.OrdinalIgnoreCase)) return typeof(StringSuccess);
                 }
             }
-            return typeof(StringEmpty);
+            if (!hasProperty) return typeof(StringEmpty);
+            throw new JsonException("No StringResult case matched the JSON properties.");
         };
 }
 
@@ -246,15 +259,17 @@ public sealed class TypeBasedClassifierFactory : JsonTypeClassifierFactory<TypeB
                     {
                         scan.Read();
                         var t = scan.GetString();
-                        if (t != null && t.Contains("Error", StringComparison.OrdinalIgnoreCase))
+                        if (string.Equals(t, nameof(TBSuccess), StringComparison.OrdinalIgnoreCase))
+                            return typeof(TBSuccess);
+                        if (string.Equals(t, nameof(TBError), StringComparison.OrdinalIgnoreCase))
                             return typeof(TBError);
-                        return typeof(TBSuccess);
+                        throw new JsonException($"Unknown TypeBased discriminator '{t ?? "<null>"}'.");
                     }
                     else scan.Skip();
                 }
                 else if (scan.TokenType is JsonTokenType.StartObject or JsonTokenType.StartArray)
                     scan.Skip();
             }
-            return typeof(TBSuccess);
+            throw new JsonException("TypeBased requires a $type discriminator.");
         };
 }

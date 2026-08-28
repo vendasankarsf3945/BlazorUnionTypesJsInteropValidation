@@ -38,8 +38,11 @@ export async function callCSharpWithAmbiguous() {
 }
 
 export async function callCSharpWithTagged() {
-    // Send $type matching what [JsonUnion] emits; observe C# → JS console output to verify the exact value
-    const payload = { $type: "TaggedSuccess", value: "from JS (tagged)" };
+    return callCSharpWithTaggedCase("TaggedSuccess", "from JS (tagged success)");
+}
+
+export async function callCSharpWithTaggedCase(discriminator, value) {
+    const payload = { $type: discriminator, value };
     console.log("JS → C# HandleTaggedFromJS:", JSON.stringify(payload));
     try {
         const result = await DotNet.invokeMethodAsync(

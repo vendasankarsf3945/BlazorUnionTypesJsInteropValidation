@@ -40,8 +40,12 @@ export async function callCSharpWithPropertyBased() {
 }
 
 export async function callCSharpWithTypeBased() {
-    // Include $type so the classifier can read it; without it the classifier defaults to TBSuccess
-    const payload = { $type: "TBSuccess", result: "success from JS (typed)" };
+    return callCSharpWithTypeBasedCase("TBSuccess");
+}
+
+export async function callCSharpWithTypeBasedCase(discriminator) {
+    const payload = { result: `${discriminator ?? "missing"} from JS` };
+    if (discriminator !== null) payload.$type = discriminator;
     console.log("JS → C# HandleTypeBasedFromJS:", JSON.stringify(payload));
     try {
         const result = await DotNet.invokeMethodAsync(

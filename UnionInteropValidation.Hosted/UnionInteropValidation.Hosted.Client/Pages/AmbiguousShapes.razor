@@ -48,7 +48,13 @@
                                     JS → .NET (ambiguous SimpleResult, no $type)
                                 </button>
                                 <button class="btn btn-primary btn-sm" @onclick="CallCSharpWithTagged">
-                                    JS → .NET (tagged TaggedResult, with $type)
+                                    JS → .NET (TaggedSuccess)
+                                </button>
+                                <button class="btn btn-primary btn-sm" @onclick="CallCSharpWithTaggedError">
+                                    JS → .NET (TaggedError)
+                                </button>
+                                <button class="btn btn-danger btn-sm" @onclick="CallCSharpWithUnknownTag">
+                                    JS → .NET (reject unknown $type)
                                 </button>
                             </div>
                         </div>
@@ -176,6 +182,24 @@
         {
             ClearMessages();
             dynamic jsResult = await module!.InvokeAsync<dynamic>("callCSharpWithTagged");
+            result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+        }
+        catch (Exception ex)
+        {
+            errorMsg = ex.Message;
+        }
+    }
+
+    private Task CallCSharpWithTaggedError() => CallCSharpWithTag("TaggedError", "error from JS");
+
+    private Task CallCSharpWithUnknownTag() => CallCSharpWithTag("UnknownCase", "must be rejected");
+
+    private async Task CallCSharpWithTag(string discriminator, string value)
+    {
+        try
+        {
+            ClearMessages();
+            dynamic jsResult = await module!.InvokeAsync<dynamic>("callCSharpWithTaggedCase", discriminator, value);
             result = System.Text.Json.JsonSerializer.Serialize(jsResult, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
         }
         catch (Exception ex)
